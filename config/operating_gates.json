@@ -18,8 +18,8 @@
       "Phát hiện lộ dữ liệu cá nhân: tắt mọi thao tác ghi và chuyển xử lý thủ công."
     ],
     "alert_channel": "#logix-pilot-ops",
-    "decision_note": false,
-    "review_sampling_pct": 0
+    "decision_note": true,
+    "review_sampling_pct": 10
   },
   "legal": {
     "pii_fields_blocked_to_third_party": ["customer_note", "recipient_contact"],
