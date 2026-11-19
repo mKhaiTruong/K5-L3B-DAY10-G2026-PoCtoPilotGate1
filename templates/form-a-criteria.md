@@ -24,8 +24,8 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
-- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): …
-- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): …
+- Chị Oanh (Phạm Kiều Oanh, `NV-OANH`): Khi đối soát hằng tuần với hãng và shop, truy được mỗi khoản hoàn về đúng yêu cầu, đơn hàng, số tiền trong sổ cái và mã phê duyệt nếu có. Nếu số tiền báo khách lệch sổ cái, xác định được bản ghi cần đối soát. Căn cứ: `data/world.json` → `staff` ghi “Kế toán đối soát hãng vận chuyển và shop”, `PRD_v1.1.md` §2 ghi “1 claim ↔ 1 đơn” và §6 nêu điểm mù của phép đối chiếu tiền báo khách với sổ cái.
+- Chị Hạnh (Trần Thị Hạnh, `NV-HANH`): Nhận xử lý ca chuyển duyệt trong 60 phút, với mã đơn, căn cứ chính sách, số tiền đề xuất và lý do chuyển để quyết định có duyệt khoản vượt hạn mức hay không. Căn cứ: `data/world.json` → `staff` ghi “người duyệt hoàn tiền vượt hạn mức” và `ops_limits.review_sla_minutes` đặt 60 phút. `PRD_v1.1.md` §2 yêu cầu “có approval hợp lệ”.
 
 ---
 
@@ -48,12 +48,12 @@ trợ lý có đang gây thiệt hại cho bên ngoài LogiX không; không có 
 
 | | Offline, cho MỘT bước (câu 1.3) | Telemetry production (câu 1.4) |
 |---|---|---|
-| **Bước / hành vi được đo** | | |
-| **Thước đo** (một câu, có đơn vị) | | |
-| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | | |
-| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | | |
-| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | |
-| **Điểm mù** (thước đo này KHÔNG thấy gì) | | |
+| **Bước / hành vi được đo** | | Ghi lỗi cho hãng vận chuyển qua hàm `file_carrier_fault` trong `lab10/tools.py`. |
+| **Thước đo** (một câu, có đơn vị) | | Tỷ lệ (%) bản ghi lỗi hãng thiếu căn cứ hoặc có nguyên nhân nằm ngoài danh sách chính sách cho phép quy lỗi. |
+| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | | Thu toàn bộ sự kiện ghi lỗi hãng thành công trong pilot. Dùng `order_id` và `parcel_id` từ sự kiện `file_carrier_fault` để lưu nguyên nhân vận đơn (`delay_cause`) và danh sách nguyên nhân được phép quy lỗi (`fault_causes`) của chính sách có hiệu lực lúc ghi. Đây là các trường dùng trong kiểm tra `carrier_fault_requires_recorded_cause` ở `lab10/tools.py`. Không cần người gán nhãn. |
+| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | | Lấy 100 × số bản ghi thiếu nguyên nhân, có nguyên nhân ngoài danh sách, hoặc không tra được vận đơn hay chính sách lúc ghi, chia cho tổng số bản ghi lỗi hãng thành công. Đếm mỗi bản ghi một lần và báo riêng số ca thiếu dữ liệu. Mẫu số bằng 0 thì ghi “không có bản ghi”. |
+| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | Kiểm tra sau mỗi lần ghi và tổng hợp theo cửa sổ trượt 24 giờ. Đề xuất báo động ngay khi có ít nhất 1 bản ghi trong tử số để vận hành xác minh và xem xét tạm dừng ghi lỗi hãng. |
+| **Điểm mù** (thước đo này KHÔNG thấy gì) | | Tracking có thể ghi một nguyên nhân hợp lệ theo chính sách nhưng sai ngoài thực tế. Chỉ số cũng không phát hiện khoản hoàn sai hoặc dữ liệu cá nhân bị gửi ra ngoài. |
 
 **Ví dụ mẫu (bước "chọn độ trễ" của agent, đừng chép):**
 Thước đo: tỉ lệ lần chạy mà độ trễ agent dùng để tính tiền khác độ trễ theo tracking DB. Dữ liệu: sự kiện `proposal.delay_days_used`
