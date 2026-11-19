@@ -1,12 +1,17 @@
 {
-  "team": "",
-  "members": [],
-  "incident": "",
-  "decision_v1": "",
-  "decision_v2": "",
+  "team": "K5-L3B-DAY10-G2026-PoCtoPilotGate1",
+  "members": [
+    "TruongDangMinhKhue-2A202603785",
+    "TrinhTuanPhong-2A202603781",
+    "TrieuQuocKhanh-2A202603749",
+    "NguyenNamKhanh-2A202603871"
+  ],
+  "incident": "S6",
+  "decision_v1": "Tiếp tục",
+  "decision_v2": "Tiếp tục",
   "three_lines": {
-    "environment_assumption": "",
-    "reduce_or_prevent": "",
-    "measure_in_pilot": ""
+    "environment_assumption": "Thiết kế giả định khách hoặc nhân viên tiếp nhận nêu đúng parcel_id khi khiếu nại đơn tách kiện: cổng ambiguous_parcel chỉ chuyển người khi ticket thiếu parcel_id mà có từ 2 kiện trễ (S6-20, S6-21), còn nếu khách nêu sai kiện thì cổng tin theo và vẫn có thể hoàn sai hoặc ghi lỗi oan cho hãng.",
+    "reduce_or_prevent": "Chỉ NGĂN ở một nhánh: đơn có từ 2 kiện trễ mà ticket không nêu kiện thì chuyển người trước lệnh ghi đầu tiên (gói S6: hoàn sai 270.000đ về 0đ, đạt 5/5 seed). Các nhánh còn lại chỉ GIẢM: trần 2 lỗi tự động/hãng/ngày vẫn để 2 lỗi đầu tự ghi, và 2 ngày chạm trần là 4 lỗi, vượt ngưỡng đình chỉ 3 lỗi/7 ngày của GHSH và DNB.",
+    "measure_in_pilot": "Đo lại trên ticket thật: tỉ lệ đơn tách kiện có từ 2 kiện trễ (thẻ S6 là 2/12 ticket, đẩy chi phí kho HCM từ 661đ lên 5.661đ/ticket), số lỗi tự động mỗi hãng trong 7 ngày so với ngưỡng đình chỉ 3 lỗi, và tỉ lệ lỗi tự động bị NV-OANH bác khi đối soát."
   }
 }
