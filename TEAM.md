@@ -15,7 +15,7 @@ Họ tên đầy đủ và MSSV của **mọi** thành viên; bàn 3 người th
 | --: | --------- | ---- | --- | :---------: |
 |   1 |    Khuê       |      | Kỹ sư cổng (viết cổng) |      ✅      |
 |   2 |    Phong       |      | Sản phẩm và kinh doanh |             |
-|   3 |       Quốc Khánh    |      | Kỹ sư cổng (đo + dò lỗi) |             |
+|   3 |       Triệu Quốc Khánh    | 2A202603749 | Kỹ sư cổng (đo + dò lỗi) |             |
 |   4 |      Nam Khánh     |      | Vận hành và pháp lý |             |
 
 Ghi `members` trong `submission/submission.json` theo dạng `"HoVaTen-MSSV"`, khớp bảng trên.
