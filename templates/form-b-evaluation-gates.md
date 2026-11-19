@@ -277,9 +277,9 @@ python3 -m unittest discover -s tests
 
 | # | Cổng (hàm và nhánh, ví dụ `write_gate` khi `tool == "issue_refund"`) | Ứng với dòng nào ở B6 / B4 | Chặn điều gì, dựa vào nguồn sự thật nào | Mã lần chạy `base · after` | Ca đang đúng nào bị hỏng? (phải là "không") |
 |---|---|---|---|---|---|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
+| 1 | `write_gate` khi `tool == "issue_refund"` (`_gate_refund`) | B6 Kỹ thuật dòng 1 + Kinh doanh dòng 1 (tin số ngày khách khai); B2 lỗi 1; phụ: B6 Kỹ thuật dòng 2 (`write_retry` ghi hoàn lần hai) | Chặn hoàn vượt quyền lợi. Quyền lợi tính lại bằng `H.entitlement_vnd` với số ngày trễ từ tracking (`H.db_delay_days` của `H.ticket_parcel`) và chính sách hiệu lực theo ngày (`H.effective_policy`), trừ đi số đã có trong sổ cái của đơn (`ledger_rows`). Quyền lợi còn lại 0 → `deny`; thấp hơn số xin → `modify` về đúng số, `payer` LOGIX; vượt hạn mức tự động mà không có phê duyệt → `escalate`. Trên bộ nền: chặn `T-002@55` (tracking 2 ngày, xin 20.000đ) | `R-base-after-20261119-172046-aa2df0` (pass 110/110, hoàn sai 0đ, lỗi hãng oan 0) | Không (legit 110/110, escalation giữ 0,2273 như base) |
+| 2 | `write_gate` khi `tool == "file_carrier_fault"` (`_gate_carrier_fault`) | B6 Kỹ thuật dòng 3 (đơn nhiều kiện lấy `parcels[0]`, nguyên nhân trống bị coi là lỗi hãng) + dòng 1; B2 lỗi 2 | Chỉ ghi lỗi khi `H.carrier_at_fault(policy, parcel, số ngày tracking)` đúng, ngược lại `deny` (tiền hoàn cho khách vẫn giữ). Kiện, hãng, tài xế, số ngày sai so với kiện của ticket → `modify` về kiện trễ nhất theo tracking. Bộ nền không có ca kích hoạt; đã kiểm bằng đơn giả 2 kiện (kiện đầu LGX đúng hẹn, kiện sau GHSH trễ 4 ngày → chuyển lỗi sang GHSH; nguyên nhân MERCHANT_HANDOVER → `deny`) | `R-base-after-20261119-172046-aa2df0` | Không |
+| 3 | `write_gate` khi `tool == "notify_carrier"` (`_gate_notify`) | B2 lỗi 2 (báo hãng "trễ 5 ngày" khi tracking ghi 2); B5 nhóm 3 và 8 (chữ khách gõ đi sang bên thứ ba) | `payload.delay_days` khác tracking → `modify` về số tracking; bỏ `customer_note` (chữ khách tự gõ, là dữ liệu, có thể chứa lệnh hoặc thông tin người khác) trước khi gửi hãng. Trên bộ nền: sửa 55 thông báo (bỏ `customer_note`) | `R-base-after-20261119-172046-aa2df0` | Không |
 
 ### B7.2 · Câu 2.7 · Hai bước tránh rò rỉ dữ liệu
 
