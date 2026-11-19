@@ -326,11 +326,11 @@ nguyên nhân trong tracking). Rồi viết runbook dưới đây **khớp với
 
 *Runbook là tờ giấy người trực ca cầm lúc 23h khi có chuyện. Nó trả lời: nhìn con số nào, ngưỡng nào thì làm gì, ai được quyết.
 Phần 1–3 và mục Giờ cao điểm viết ở vòng 1. Phần 4–5 viết ở vòng 2 (Phiếu C mục C11). Mọi con số phải khớp `config/operating_gates.json` và report.*
-*Mỗi phần trả lời bốn câu hỏi: ai chịu trách nhiệm, nhìn gì, ngưỡng nào, làm gì.* **Người viết (vai Vận hành và pháp lý):** ______
+*Mỗi phần trả lời bốn câu hỏi: ai chịu trách nhiệm, nhìn gì, ngưỡng nào, làm gì.* **Người viết (vai Vận hành và pháp lý):** Nam Khánh
 
 #### Runbook 1 · Ai chịu trách nhiệm
 
-Kênh báo đề xuất: `#logix-pilot-ops`. Xác nhận kênh và người trực trước pilot. Tên và mã nhân viên lấy từ `data/world.json` → `staff`.
+Kênh báo theo `operations.alert_channel`: `#logix-pilot-ops`. Xác nhận người trực nhận được cảnh báo trong buổi diễn tập trước pilot. Tên và mã nhân viên lấy từ `data/world.json` → `staff`.
 
 | Vai | Tên / mã nhân viên | Được quyền làm gì | Liên lạc |
 |---|---|---|---|
@@ -339,7 +339,7 @@ Kênh báo đề xuất: `#logix-pilot-ops`. Xác nhận kênh và người tr�
 | Người giữ công tắc | Lê Thanh Tùng / NV-TUNG | Tắt hoặc bật từng thao tác ghi. | Kênh báo ca trực |
 | Người nhận khiếu nại bên thứ ba | Trần Thị Hạnh / NV-HANH (đề xuất) | Tiếp nhận và chuyển Oanh đối soát khi liên quan sổ cái. | CSKH và kênh báo ca trực |
 
-Một người duyệt mỗi ca, công suất 6 ca/giờ theo `ops_facts`. Phạm vi theo `business.pilot_scope` do Phong chốt.
+Mỗi ca có 1 người duyệt, công suất 6 ca/giờ, chờ tối đa 60 phút theo `operations`. Phạm vi là tất cả kho, 100% ticket theo `business.pilot_scope`. Theo `legal`, thông báo cho hãng bỏ `customer_note` và `recipient_contact`. Chỉ ghi lỗi hãng khi tracking có nguyên nhân và chính sách hiện hành cho phép quy lỗi.
 
 #### Runbook 2 · Nhìn con số nào, ngưỡng nào thì làm gì
 
@@ -347,17 +347,19 @@ Một người duyệt mỗi ca, công suất 6 ca/giờ theo `ops_facts`. Phạ
 |---|---|---|---|---|---|
 | Chờ duyệt lâu nhất | Report `queue_wait_max_min` | < 40 phút | 40–60 phút: gọi người hỗ trợ | > 60 phút: nhận ca quá hạn, thu hẹp pilot | Hạnh, Tùng |
 | Ca bị ùn | Report `queue_stuck` | 0 | Ca sắp quá hạn: ưu tiên xử lý | Có ca bị ùn: chuyển trưởng ca và thu hẹp nếu quá 60 phút | Hạnh, Tùng |
-| Chi phí mỗi ticket | Report `cost_per_ticket_vnd` | Dưới 90% trần business | Từ 90% trần: kiểm nguyên nhân | Vượt trần: đề xuất thu hẹp | Phong, Tùng |
-| Hoàn tự động trong ngày | Report `auto_refund_day_max_vnd` | Dưới 80% trần business | Từ 80% trần: báo Finance | Chạm trần: chuyển ca tiếp theo cho người duyệt | Hạnh |
+| Tổng chi phí mỗi ticket | Report `cost_per_ticket_vnd` | < 7.200đ | 7.200–8.000đ: kiểm chi phí duyệt và mô hình | > 8.000đ: đề xuất thu hẹp | Phong, Tùng |
+| Chi phí LLM cao nhất mỗi ticket | Report `llm_cost_max_per_ticket_vnd` | < 1.350đ | 1.350–1.500đ: kiểm các ca tốn nhiều lượt xử lý | > 1.500đ: kiểm nguyên nhân và chuyển ca vượt ngân sách sang xử lý tay | Phong, Tùng |
+| ROI | Report `roi` | > 0,30 | = 0,30: kiểm chi phí và phạm vi | < 0,30: đề xuất thu hẹp và đo lại | Phong, Tùng |
+| Hoàn tự động trong ngày | Report `auto_refund_day_max_vnd` | < 400.000đ | 400.000–499.999đ: báo Finance | Chạm 500.000đ: chuyển ca tiếp theo cho người duyệt | Hạnh |
 | Tiền hoàn sai | Report `wrongful_refund_vnd` | 0đ | Có phản ánh: đối soát | Xác nhận > 0đ: tắt `issue_refund` | Tùng |
-| Ghi oan hoặc lộ dữ liệu cá nhân | Report `wrongful_carrier_faults`, `pii_leaks` | 0 | Có phản ánh: xác minh | Ghi oan: tắt `file_carrier_fault`. Lộ dữ liệu cá nhân: dừng mọi thao tác ghi | Tùng |
+| Ghi oan hoặc lộ dữ liệu cá nhân | Report `wrongful_carrier_faults`, `pii_leaks` | 0 | Có phản ánh: xác minh | Ghi oan: tắt ngay `file_carrier_fault` và `notify_carrier`. Lộ dữ liệu cá nhân: dừng mọi thao tác ghi | Tùng |
 | Tỷ lệ chuyển duyệt | Report `review_rate` | Dự báo dưới 6 ca/giờ | Đạt 6 ca/giờ: kiểm hàng chờ | Dự kiến quá 60 phút: thu hẹp | Hạnh, Tùng |
 
-Mốc 40 phút, 80% và 90% là ngưỡng cảnh báo đề xuất. Giới hạn 60 phút lấy từ `ops_limits.review_sla_minutes`.
+Mốc 40 phút, 80% và 90% là ngưỡng cảnh báo đề xuất. Giới hạn 60 phút lấy từ `ops_limits.review_sla_minutes`. Trần hoàn 500.000đ/ngày, ngân sách LLM 1.500đ/ticket và sàn ROI 0,30 lấy từ B7.4. Trần tổng chi phí 8.000đ/ticket và 0 ca ùn lấy từ tiêu chí đã ký.
 
 #### Runbook 3 · Điều kiện dừng và cách dừng
 
-- Khi xác nhận hoàn sai hoặc ghi oan, Tùng chuyển thao tác tương ứng sang `off` trong `config/switches.json`.
+- Khi xác nhận hoàn sai, Tùng tạm tắt `issue_refund` để đối soát. Nếu sau hai vòng sửa vẫn hoàn sai, dừng tự hoàn theo `stop_condition` đã ký. Khi xác nhận ghi oan, Tùng tắt ngay `file_carrier_fault` và `notify_carrier` trong `config/switches.json`.
 - Khi xác nhận lộ dữ liệu cá nhân, Tùng đặt cả bốn thao tác ghi thành `off` và chuyển xử lý thủ công.
 - Khi hàng chờ quá 60 phút, Hạnh nhận ca quá hạn và Tùng thống nhất phạm vi hẹp hơn với Phong trong `business.pilot_scope`.
 - Mục tiêu đề xuất: Tùng hoàn tất dừng trong 10 phút kể từ tín hiệu đỏ. Hạnh tiếp nhận hàng chờ, Oanh đối soát bản ghi bị ảnh hưởng.
@@ -367,11 +369,11 @@ Mốc 40 phút, 80% và 90% là ngưỡng cảnh báo đề xuất. Giới hạn
 
 | Câu hỏi | Trả lời |
 |---|---|
-| Khi nào và bao nhiêu ticket? | Ngày sale hoặc sau bão. Kiểm tải gấp 3 lần giờ thường. Với 6 ca chuyển duyệt trong giờ thường, kịch bản cao điểm có 18 ca chuyển duyệt. Lưu lượng thực tế lấy từ báo cáo pilot. |
+| Khi nào và bao nhiêu ticket? | Ngày sale hoặc sau bão. Bộ nền có 22 ticket/ngày giả lập. Với ca 8 giờ theo `ops_facts.shift_minutes`, nhịp bình quân là 2,75 ticket/giờ. Dùng gấp ba, khoảng 8–9 ticket trong một giờ, làm kịch bản dự báo. Đếm riêng ca chuyển duyệt thực tế để so với công suất. |
 | Ai trực? | Hạnh đứng tên ca có 1 người duyệt, công suất 6 ca/giờ. |
 | Khi nào gọi thêm người? | Từ 5 ca chờ hoặc ca lâu nhất chờ 40 phút, Hạnh gọi hỗ trợ và cập nhật công suất theo số người thực sự trực. |
-| Khi nào thu hẹp hoặc tắt? | Nếu dự báo quá 60 phút dù đã gọi hỗ trợ, Tùng và Phong thu hẹp pilot. Tùng tắt thao tác liên quan khi xác nhận hoàn sai hoặc ghi oan. |
-| Chi phí và ROI đổi thế nào? | `ops_facts` quy định phí thêm 30.000đ mỗi người mỗi ca. Với N ticket, riêng phí này làm tăng 30.000/N đồng mỗi ticket. So chi phí và ROI trên báo cáo của hai cấu hình khi có kết quả. |
+| Khi nào thu hẹp hoặc tắt? | Nếu dự báo quá 60 phút dù đã gọi hỗ trợ, Tùng và Phong thu hẹp pilot. Tùng thực hiện Runbook 3 khi xác nhận hoàn sai, ghi oan hoặc lộ dữ liệu. |
+| Chi phí và ROI đổi thế nào? | So cùng 22 ticket nền, cùng cổng và phạm vi của mốc Round 1 `2d59c8c3`, chỉ đổi nhân sự và công suất tương ứng. 1 người, 6 ca/giờ (`R-base-after-20261119-174002-65a8a4`): 4.202đ/ticket, ROI 1,38. 2 người, 12 ca/giờ (`R-base-after-20261119-174003-3f05f4`): 5.565đ/ticket, ROI 0,80. Hai lượt đều chờ tối đa 0 phút và có 0 ca ùn. Thêm người làm chi phí báo cáo tăng 1.363đ/ticket và ROI giảm 0,58. Giữ 1 người theo cấu hình vòng 1, gọi hỗ trợ khi đạt ngưỡng ở trên. Đây là kết quả bộ nền. Kịch bản tăng tải gấp ba ở trên là dự báo. |
 
 ---
 
