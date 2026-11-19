@@ -29,7 +29,7 @@ Mọi con số trong quyết định Gate 1 phải trỏ về một dòng ở đ
 
 | # | Mã lần chạy | Bộ ticket · mốc | Đổi MỘT thứ gì so với lần trước | pass_rate (khoảng tin cậy 95%) | pass_k | Hoàn sai (đ) · lỗi hãng oan · lộ dữ liệu | Tỉ lệ chuyển người | Kết luận (một câu) |
 |---|---|---|---|---|---|---|---|---|
-| 1 | | base · base | (baseline, chưa có cổng) | | | | | |
+| 1 | R-base-before-20261119-162853-bde05c | base · base | (baseline, chưa có cổng) | 0,9909 [0,9727; 1,0] | 0,9545 | 20.000đ · 1 · 0 | 0,2273 | Đạt pass_rate, pass_k, lộ dữ liệu; chưa đạt hoàn sai và lỗi hãng oan, đều do T-002@55 |
 | 2 | | base · after | (cổng vòng 1, thử trước khi chốt) | | | | | |
 | 3 | | base · prepared | (cổng vòng 1 đã chốt) | | | | | |
 | 4 | | | | | | | | |
@@ -45,18 +45,18 @@ python3 -m lab10.eval --suite base --stage base --note "baseline"
 python3 -m lab10.gate --run runs/<mã lần chạy>/report.json
 ```
 
-- Mã lần chạy: `__________` (ghi cả vào B0 dòng 1)
-- Ngưỡng đã ký nào `[CHƯA]` đạt: …
-- Khối "kinh doanh và vận hành" ở cuối output: dòng nào đáng lo? …
-- Khối "theo kho và hãng": kho hoặc hãng nào có số xấu nhất? …
+- Mã lần chạy: `R-base-before-20261119-162853-bde05c` (ghi cả vào B0 dòng 1)
+- Ngưỡng đã ký nào `[CHƯA]` đạt: `wrongful_refund_vnd` 20.000đ (ngưỡng ≤ 0) và `wrongful_carrier_faults` 1 (ngưỡng ≤ 0); cả hai đều do `T-002@55`.
+- Khối "kinh doanh và vận hành" ở cuối output: dòng nào đáng lo? Chưa đặt trần hoàn tự động theo nhóm (`team_daily_cap` = null); nhân viên kiểm lại 0%; kho "?" tốn 10.359đ mỗi ticket, cao hơn làm tay (10.000đ).
+- Khối "theo kho và hãng": kho hoặc hãng nào có số xấu nhất? Kho HCM (pass_rate 0,96) và hãng VNX (pass_rate 0,9714), nơi dồn cả hoàn sai 20.000đ và 1 lỗi hãng oan; VNX bị trừ 100.000đ mỗi lỗi.
 
 **Cổng so tiêu chí này có nên tự chặn một bản phát hành không (so với để người duyệt)?**
 
 | Lý lẽ ủng hộ tự chặn | Lý lẽ phản đối |
 |---|---|
-| | |
+| Thiệt hại ra ngoài không đảo ngược được: hoàn nhầm 20.000đ, quy lỗi oan cho VNX bị trừ 100.000đ mỗi lỗi | Escalation 0,2273 đã sát ngưỡng 0,25; 109/110 lượt chạy đúng nên chặn tự động cả bản gần đạt dễ làm chậm việc |
 
-Khuyến nghị (khoanh một): **tự chặn · người duyệt · kết hợp**. Vì: …
+Khuyến nghị (khoanh một): **kết hợp**. Vì: cổng tự chặn khi vi phạm ngưỡng cứng không đảo ngược (hoàn sai, lỗi hãng oan, lộ dữ liệu); ca sát ngưỡng như escalation 0,2273 so với 0,25 chuyển cho người duyệt.
 
 ---
 
