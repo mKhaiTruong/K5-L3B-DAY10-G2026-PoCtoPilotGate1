@@ -306,10 +306,10 @@ Mỗi con số kèm một câu lý do, lấy từ `data/world.json` → `ops_lim
 
 | Khoá | Giá trị bàn đặt | Lý do (một câu, có số) |
 |---|---|---|
-| `business.daily_refund_cap_vnd` | | |
-| `business.cost_budget_per_ticket_vnd` | | |
-| `business.pilot_scope` (all / warehouse / percent) | | |
-| `business.roi_min` | | |
+| `business.daily_refund_cap_vnd` | 500000 | Một ngày bình thường hoàn tự động 155.000đ (base), trần 500.000đ gấp khoảng 3 lần nên không chặn nhầm ngày thường, nhưng nếu trợ lý hỏng hàng loạt thì thiệt hại tối đa chỉ bằng 25% ngân sách 2.000.000đ/ngày của tài chính (`ops_limits`); vượt trần thì chuyển người duyệt. |
+| `business.cost_budget_per_ticket_vnd` | 1500 | Bằng trần tiền LLM 1.500đ/ticket bên vận hành đã chốt (`ops_limits`), cao hơn ticket tốn nhất ở base (670đ) nên không đẩy thêm ca sang người duyệt (mỗi ca duyệt tốn 10.000đ, `ops_facts`). |
+| `business.pilot_scope` (all / warehouse / percent) | all | Cả 4 kho đều rẻ hơn làm tay 10.000đ/ticket (HN 1.993đ, CT 590đ, HCM 2.571đ, DN 4.586đ), HCM chỉ hỏng đúng 1 ca T-002@55 do luật "khách tự khai trễ thắng tracking" chứ không do kho, nên vòng 1 sửa bằng cổng code; chỉ cắt HCM ở B8 nếu sau vòng 1 kho này vẫn hỏng. |
+| `business.roi_min` | 0.3 | Khớp ngưỡng ROI ≥ 0,3 đã ký ở phiếu A (`business_ops.roi_min`); base đang đạt ROI 1,34 (tiết kiệm ròng 123.542đ/ngày) nên ngưỡng này là sàn báo động khi chi phí duyệt hoặc hoàn sai tăng. |
 
 ### B7.5 · Câu 2.10 · Cổng con người, vận hành, pháp lý + Runbook phần 1–3
 
