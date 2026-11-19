@@ -353,7 +353,7 @@ Thẻ S5 dùng mục này cho một con số kinh doanh: chi phí mỗi ticket t
 | **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | (1) lỗi ghi cho kiện có `delay` nhỏ hơn `delay` lớn nhất của đơn ÷ tổng dòng lỗi hãng; trial không có tracking thì bỏ qua cả tử và mẫu; không có lỗi nào thì 0. (2) đếm dòng lỗi theo (seed, day, hãng) rồi lấy lớn nhất; không có lỗi thì 0. |
 | **Khung thời gian / ngưỡng báo động** | Theo từng ngày vận hành. (1) báo động khi > 0 (bộ nền là 0). (2) vượt trần khi > 2 (`ops_limits.max_auto_strikes_per_carrier_per_day`); bằng 2 là chạm trần, báo vàng. |
 | **Điểm mù** (chỉ số này KHÔNG thấy gì) | (1) không thấy khi chính tracking DB ghi sai kiện; không thấy ca hai kiện trễ bằng nhau (`S6-21`: DNB 4 ngày, MKD 4 ngày); không thấy lỗi ghi đúng kiện nhưng sai hãng. (2) không thấy 2 lỗi đầu trong ngày nếu chúng sai; "ngày" trong dữ liệu giả lập là nhóm ticket cùng `scenario`, không phải ngày lịch thật. |
-| Giá trị trên bộ nền · trên thẻ (đọc mục `monitor` của report) | (1) base 0,0 · thẻ S6 trước khi sửa 0,4167 · sau 0,0. (2) base 1 · thẻ S6 trước 4 · sau 2 (đúng bằng trần). Nguồn: report `R-S6-grade-20261119-105105-03b4f1`, mục `monitor`; kiểm tra 6 ✅. |
+| Giá trị trên bộ nền · trên thẻ (đọc mục `monitor` của report) | (1) base 0,0 · thẻ S6 trước khi sửa 0,4167 · sau 0,0. (2) base 1 · thẻ S6 trước 4 · sau 2 (đúng bằng trần). Nguồn: report `R-S6-grade-20261119-205546-ce8bfe`, mục `monitor`; kiểm tra 6 ✅. |
 
 ---
 

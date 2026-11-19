@@ -100,3 +100,67 @@ Có dùng ChatGPT/Codex để đọc tài liệu và trace, hỗ trợ soạn v�
 
 - Một điều học được: Có những tình huống nghe như khó có thể xảy ra, nhưng mô hình vẫn có thể gặp phải.
 - Một điều còn chưa chắc: Liệu các biện pháp nhóm đã làm có bao quát hết các tình huống có thể xảy ra hay chưa?
+
+## TruongDangMinhKhue-2A202603785
+
+### Phần việc phụ trách
+
+Vai **Kỹ sư cổng 1 (viết cổng)**, trưởng nhóm: code cổng trong `lab10/guards.py`, chạy các lệnh chốt mốc, điều phối và review PR.
+
+- Phiếu A: chia vai CP1, Phiếu A CP2 (PR #1, #2).
+- Phiếu B: B6 lăng kính Con người và vận hành, B7.1 (câu 2.6, ba cổng vòng 1); lệnh 5 chốt cổng vòng 1 và lần chạy prepared.
+- `lab10/guards.py`: ba cổng vòng 1 và hai nhánh vòng 2 cho thẻ S6.
+- Phiếu C (thẻ S6): C0 (nhận thẻ, mốc prepared, mốc after cuối), C7 dòng code (câu 3.5).
+- Điều phối: viết issue phân việc CP3, CP4, CP5 (#7, #17, #23), review và merge PR, gỡ conflict khi ghép nhánh, chạy lệnh 7 và đẩy bài.
+
+### Đóng góp cụ thể
+
+- Vòng 1: Cổng 1 giới hạn tiền hoàn theo quyền lợi tính từ tracking; Cổng 2 chỉ ghi lỗi đúng kiện, đúng hãng, đúng số ngày tracking; Cổng 3 bỏ chữ khách gõ khỏi thông báo gửi hãng. Chốt bằng lệnh 5 (prepared `2d59c8c3`).
+- Vòng 2 (thẻ S6): nhánh `ambiguous_parcel` trong `_gate_refund` (ticket không nêu kiện mà có từ 2 kiện trễ thì chuyển người trước lệnh ghi đầu tiên) và nhánh `carrier_strike_cap` trong `_gate_carrier_fault` (từ lỗi tự động thứ 3 của một hãng trong ngày phải có người duyệt, theo `ops_limits`).
+- Kết quả trên S6: lỗi ghi oan cho hãng 40 → 20 → 0, hoàn sai 270.000đ → 0đ, bộ nền không có ca mới hỏng.
+
+### Bằng chứng
+
+- Commit: `b4ba27a` (câu 2.6), `b75edb3` (B6), `6e5b4da` (chốt vòng 1), `731e208` (nhận thẻ S6), `f87274e` (câu 3.5), `27b97f7` (giữ byte bản chốt khớp `round1.lock`), `47537b4` (C0 mốc after). PR #1, #2, #15, #16, #20, #26.
+- Mã lần chạy: prepared `R-S6-prepared-20261119-174403-65a8a4`; mốc chính thức base `R-S6-before-20261119-205547-ce8bfe`, prepared `R-S6-prepared-20261119-205547-ce8bfe`, after `R-S6-after-20261119-205547-ce8bfe`, grade `R-S6-grade-20261119-205546-ce8bfe` (PASS-VISIBLE).
+- Dòng trong phiếu: Phiếu B mục B6, B7.1. Phiếu C mục C0, C7.
+
+### Có dùng AI không
+
+Có. Tôi dùng Claude Code (Anthropic) để đọc tài liệu lab, kiểm tra trạng thái và khả năng merge của PR, gỡ conflict khi ghép nhánh, soạn nháp issue phân việc và mục C0 từ report, và thao tác git, GitHub (branch, commit, push, mở PR, comment). Tôi tự quyết định cách sửa cổng, duyệt mọi thay đổi trước khi merge và tự chạy các lệnh `lab10`.
+
+### Exit ticket
+
+- Học được: cổng nằm ngoài model chỉ đáng tin khi mỗi lần sửa có số đo lại trên cả gói sự cố lẫn bộ nền; sửa mà không chạy lại thì không biết mình vừa làm hỏng ca nào.
+- Còn chưa chắc: trần lỗi theo ngày có thật sự bảo vệ hãng nhỏ trước ngưỡng đình chỉ theo 7 ngày khi chạy thật hay không, vì bộ thử không có lịch sử nhiều ngày.
+
+## TrieuQuocKhanh-2A202603749
+
+### Phần việc phụ trách
+
+Vai **Kỹ sư cổng 2 (đo và dò lỗi)**: chạy đánh giá, trace lỗi và viết chỉ số theo dõi trong `lab10/monitors.py`.
+
+- Phiếu B: B0, B1 (câu 2.1, lần chạy baseline), B2 (câu 2.2, trace `T-002@55`), B6 lăng kính Kỹ thuật, B7.2, B7.3 (câu 2.7, 2.8).
+- `lab10/monitors.py`: hai chỉ số mới cho thẻ S6.
+- Phiếu C (thẻ S6): C2 (câu 3.1, bảng soát lỗi), C8 (câu 3.6), tên monitor ở bảng C9.
+
+### Đóng góp cụ thể
+
+- Lần chạy baseline và bảng soát lỗi `T-002@55` làm đầu vào cho cổng vòng 1.
+- Hai bước tránh rò rỉ dữ liệu và behavioral test bằng `--adhoc` với ticket hiểm (B7.2, B7.3).
+- Trace thẻ S6 theo hai kiểu hỏng khác nhau: `S6-01` (ghi lỗi cho kiện không trễ), `S6-20` (nhiều kiện cùng trễ, không nêu kiện), `S6-40` … `S6-43` (dồn lỗi về một hãng trong ngày).
+- Hai monitor: `fault_on_nonworst_parcel_rate` (base 0,0 · S6 trước khi sửa 0,4167 · sau 0,0) và `carrier_strikes_per_day_max` (1 · 4 · 2), giúp ô `6 monitor` của `grade` đạt.
+
+### Bằng chứng
+
+- Commit: `6c0768c`, `270c8a1` (B0, B1), `3948e96` (B2), `1f48e3b` (B7.2, B7.3), `55d41dd` (B6), `25b4748` (monitor, C2, C8, C9). PR #3, #10, #11, #13, #24.
+- Mã lần chạy: baseline `R-base-before-20261119-162853-bde05c`; monitor trong grade `R-S6-grade-20261119-205546-ce8bfe`.
+- Dòng trong phiếu: Phiếu B mục B0, B1, B2, B6, B7.2, B7.3. Phiếu C mục C2, C8, C9.
+
+### Có dùng AI không
+
+_(Khánh tự điền: có dùng AI cho phần nào không.)_
+
+### Exit ticket
+
+_(Khánh tự điền: một điều học được, một điều còn chưa chắc.)_
