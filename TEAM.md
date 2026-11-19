@@ -67,6 +67,10 @@ Vai **Sản phẩm và kinh doanh**: tiêu chí chấp nhận, chi phí và quy�
 - Mã lần chạy: v1 `R-base-prepared-20261119-173345-1b1054`. v2 `R-S6-after-20261119-205547-ce8bfe`, `R-base-after-20261119-210929-ce8bfe`, grade `R-S6-grade-20261119-205546-ce8bfe`.
 - Dòng trong phiếu: Phiếu B mục B8. Phiếu C mục C1, C6, C7 dòng [3], C9, C12.
 
+### Có dùng AI không
+
+Có. Mình dùng Claude Code (Anthropic) để đọc tài liệu lab, chạy lệnh (`lab10.eval`, `lab10.gate`, `lab10.trace`, `lab10.grade`, `lab10.check_submission`), soạn nháp các mục phiếu ở trên từ số liệu trong report và trace, và làm thao tác git (branch, commit, push). Mình tự chọn các ngưỡng, các con số trong mục `business` và quyết định v1, v2. Mình đọc và sửa lại mọi bản nháp trước khi mở PR. Mọi PR đều được bạn khác trong bàn review.
+
 ### Exit ticket
 
 - Học được: phải ký tiêu chí trước khi đo, và quyết định phải khớp đúng dòng đã ký. v1 chỉ đo bộ nền nên chưa đủ để chọn "Tiếp tục", phải ghi rõ là có điều kiện.
