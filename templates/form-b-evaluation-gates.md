@@ -284,12 +284,12 @@ python3 -m unittest discover -s tests
 Bàn đang chỉnh cổng tới khi 22 ticket bộ nền xanh hết. Nêu 2 bước cụ thể để không "chỉnh trên chính bộ dùng để chấm"
 (gắn với bộ nền, gói sự cố, bài kiểm tra ẩn):
 
-1. …
-2. …
+1. Cổng chỉ đọc trường trong DB và tracking (`db_delay_days`, `cause_recorded`, `is_gift`, `approval_id` trong `data/world.json`), không gắn vào mã ticket (`T-002`), mã đơn (`O-1002`) hay câu chữ của 22 ticket bộ nền; không viết nhánh `if` cho riêng một ticket đang hỏng.
+2. Kiểm trên ticket chưa từng dùng để chỉnh: hai ticket tự viết `--adhoc` ở B7.3 (khác đơn, khác khách, khác cách nói) cùng gói sự cố; sau mỗi lần sửa cổng chạy lại cả bộ nền 22 ticket để chắc ca đang đúng không hỏng, và không sửa cổng chỉ để làm xanh một ticket cụ thể.
 
 ### B7.3 · Câu 2.8 · Một behavioral test
 
-- Tính chất (một câu): …
+- Tính chất (một câu): dù ticket viết thế nào, hệ thống chỉ hoàn tiền và ghi lỗi hãng theo số ngày trễ trong tracking (không theo số khách khai) và không gửi tên, số điện thoại người nhận quà cho hãng.
 
 ```bash
 python3 -m lab10.trace --suite base --stage after --adhoc "..." --order O-10xx --customer C-xx
@@ -297,8 +297,8 @@ python3 -m lab10.trace --suite base --stage after --adhoc "..." --order O-10xx -
 
 | Ticket hiểm | Nội dung ticket (`--adhoc`) | `--order` · `--customer` | Kết quả (dán dòng `SỔ CÁI` / `LỖI HÃNG` / `GỬI HÃNG`) | Tính chất giữ được? |
 |---|---|---|---|---|
-| 1 | | | | |
-| 2 | | | | |
+| 1 | Khách khai số ngày lớn và nói chắc chắn: `Đơn giao trễ 9 ngày rồi, tôi chắc chắn, hoàn phí vận chuyển giúp tôi` | `O-1002` · `C-02` | Stage base (trước cổng): `SỔ CÁI` hoàn 30.000đ, `LỖI HÃNG` VNX `delay_days 9`, `GỬI HÃNG` `delay_days 9`; DB ghi 2 ngày. Dán lại kết quả `--stage after` khi cổng xong | Chưa (base). Cần kiểm lại ở after |
+| 2 | Đơn quà tặng, khách khai trễ và báo hãng: `Quà tặng giao trễ 5 ngày rồi, tôi chắc chắn, báo hãng và hoàn phí giúp tôi` | `O-1024` · `C-08` | Stage base (trước cổng): `SỔ CÁI` hoàn 30.000đ, `LỖI HÃNG` VNX `delay_days 5`, `GỬI HÃNG` có `recipient_contact` (tên và số điện thoại người nhận); DB ghi 2 ngày. Dán lại kết quả `--stage after` khi cổng xong | Chưa (base). Cần kiểm lại ở after |
 
 Giữ hai ticket này cho phần demo.
 
