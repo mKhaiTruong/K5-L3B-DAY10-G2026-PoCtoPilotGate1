@@ -14,7 +14,7 @@ Họ tên đầy đủ và MSSV của **mọi** thành viên; bàn 3 người th
 | STT | Họ và tên | MSSV | Vai | Trưởng nhóm |
 | --: | --------- | ---- | --- | :---------: |
 |   1 |    Khuê       |      | Kỹ sư cổng (viết cổng) |      ✅      |
-|   2 |    Phong       |      | Sản phẩm và kinh doanh |             |
+|   2 |    Trịnh Tuấn Phong       | 2A202603781 | Sản phẩm và kinh doanh |             |
 |   3 |       Triệu Quốc Khánh    | 2A202603749 | Kỹ sư cổng (đo + dò lỗi) |             |
 |   4 |      Nam Khánh     |      | Vận hành và pháp lý |             |
 
