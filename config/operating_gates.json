@@ -7,18 +7,22 @@
     "roi_min": 0.3
   },
   "operations": {
-    "pic": "",
-    "approver_id": "",
+    "pic": "NV-TUNG",
+    "approver_id": "NV-HANH",
     "reviewers_on_shift": 1,
-    "review_capacity_per_hour": null,
-    "max_queue_wait_minutes": null,
-    "stop_conditions": [],
-    "alert_channel": "",
+    "review_capacity_per_hour": 6,
+    "max_queue_wait_minutes": 60,
+    "stop_conditions": [
+      "Chờ duyệt quá 60 phút: chuyển ca quá hạn cho trưởng ca và thu hẹp phạm vi.",
+      "Phát hiện hoàn sai hoặc ghi oan cho hãng: tắt thao tác tương ứng.",
+      "Phát hiện lộ dữ liệu cá nhân: tắt mọi thao tác ghi và chuyển xử lý thủ công."
+    ],
+    "alert_channel": "#logix-pilot-ops",
     "decision_note": false,
     "review_sampling_pct": 0
   },
   "legal": {
-    "pii_fields_blocked_to_third_party": [],
-    "carrier_fault_requires_recorded_cause": false
+    "pii_fields_blocked_to_third_party": ["customer_note", "recipient_contact"],
+    "carrier_fault_requires_recorded_cause": true
   }
 }
