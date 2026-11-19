@@ -48,12 +48,12 @@ trợ lý có đang gây thiệt hại cho bên ngoài LogiX không; không có 
 
 | | Offline, cho MỘT bước (câu 1.3) | Telemetry production (câu 1.4) |
 |---|---|---|
-| **Bước / hành vi được đo** | | |
-| **Thước đo** (một câu, có đơn vị) | | |
-| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | | |
-| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | | |
+| **Bước / hành vi được đo** | Ghi lỗi hãng (`file_carrier_fault`, bước ghi sau `issue_refund`): agent ghi hãng nào, kiện nào có lỗi giao trễ | |
+| **Thước đo** (một câu, có đơn vị) | Tỉ lệ ghi oan (%): phần trăm lệnh ghi lỗi hãng mà cặp (hãng, kiện) không có trong đáp án; đo kèm tỉ lệ bỏ sót (%) | |
+| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | Lệnh ghi lỗi của agent: event `tool` có `tool = file_carrier_fault` (`carrier_id`, `parcel_id`) trong `runs/<mã lần chạy>/traces/`. Đáp án: `label.faults` của từng ticket trong `data/tickets.jsonl`, do đội ra đề gán sẵn. Bộ nền 22 ticket × 5 seed = 110 lần chạy | |
+| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | Ghi oan = số lệnh có (hãng, kiện) ∉ `label.faults` ÷ tổng số lệnh `file_carrier_fault`. Bỏ sót = số (hãng, kiện) ∈ `label.faults` mà agent không ghi ÷ tổng số cặp trong `label.faults`. Lần chạy agent không ghi lỗi nào (escalate, từ chối) bị loại khỏi mẫu số ghi oan nhưng vẫn tính trong bỏ sót. Mẫu số = 0 thì ghi "không đủ dữ liệu", không ghi 0% | |
 | **Khung thời gian / ngưỡng báo động** | (không áp dụng) | |
-| **Điểm mù** (thước đo này KHÔNG thấy gì) | | |
+| **Điểm mù** (thước đo này KHÔNG thấy gì) | Không thấy khi chính đáp án hoặc tracking DB ghi sai nguyên nhân trễ; không thấy lệnh `notify_carrier` sau đó có gửi SĐT/tên người nhận cho hãng (lộ PII); không thấy thiệt hại tiền, vì ghi oan 1 kiện nhỏ hay lớn đều tính là 1 | |
 
 **Ví dụ mẫu (bước "chọn độ trễ" của agent, đừng chép):**
 Thước đo: tỉ lệ lần chạy mà độ trễ agent dùng để tính tiền khác độ trễ theo tracking DB. Dữ liệu: sự kiện `proposal.delay_days_used`
