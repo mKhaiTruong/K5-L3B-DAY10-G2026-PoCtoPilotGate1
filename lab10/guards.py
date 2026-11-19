@@ -50,12 +50,23 @@ def _db_facts(ctx, order_id):
     return order, parcel, delay, policy
 
 
+def _late_parcels(order, policy, as_of):
+    """Return the parcels whose tracking delay reaches the policy's minimum late days."""
+    return [p for p in order["parcels"] if H.db_delay_days(p, as_of) >= policy["late"]["min_days_fee"]]
+
+
 def _gate_refund(ctx, action):
     """Cổng 1 (B6 Kỹ thuật 1 + Kinh doanh 1, B2 lỗi 1): số tiền hoàn không vượt quyền lợi tính từ tracking."""
     facts = _db_facts(ctx, action["order_id"])
     if facts is None:
         return Verdict.escalate("cổng 1: không tra được đơn hoặc chính sách hiệu lực")
     order, parcel, delay, policy = facts
+
+    # Vòng 2 (thẻ S6): đơn nhiều kiện, ticket không nói kiện nào, mà >= 2 kiện cùng trễ -> không đoán, chuyển người
+    late = _late_parcels(order, policy, ctx.as_of)
+    if not ctx.ticket.get("parcel_id") and len(late) >= 2:
+        ctx.log("ambiguous_parcel", order_id=order["order_id"], late_parcels=[p["parcel_id"] for p in late])
+        return Verdict.escalate(f"cổng 1: {len(late)} kiện cùng trễ, ticket không nói kiện nào: chuyển người xác định")
 
     cause    = parcel.get("delay_cause") or ("CARRIER" if delay > 0 else None)
     entitled = H.entitlement_vnd(policy, order, delay, cause)
@@ -88,6 +99,14 @@ def _gate_carrier_fault(ctx, action):
                 db_delay_days=delay)
         return Verdict.deny(f"cổng 2: kiện {parcel['parcel_id']} trễ {delay} ngày, "
                             f"nguyên nhân {parcel.get('delay_cause')} không tính lỗi hãng")
+
+    # Vòng 2 (thẻ S6): từ lỗi thứ (trần + 1) của cùng một hãng trong ngày phải có người duyệt (ops_limits)
+    cap   = ctx.tools.ops_limits().get("max_auto_strikes_per_carrier_per_day")
+    today = len(ctx.tools.fault_rows(carrier_id=parcel["carrier_id"]))
+    if cap is not None and today >= cap:
+        ctx.log("carrier_strike_cap", carrier_id=parcel["carrier_id"], today=today, cap=cap)
+        return Verdict.deny(f"cổng 2: hãng {parcel['carrier_id']} đã có {today} lỗi tự động hôm nay "
+                            f"(trần {cap}), lỗi tiếp theo cần người duyệt")
 
     fixed = {"parcel_id": parcel["parcel_id"], "carrier_id": parcel["carrier_id"],
              "driver_id": parcel.get("driver_id"), "delay_days": delay}

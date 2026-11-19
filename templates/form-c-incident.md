@@ -1,6 +1,6 @@
 # Phiếu C · Sự cố và quyết định v2 · Khối 3 (phút 125–200)
 
-**Bàn:** ______ · **Thẻ đã bốc:** ___ *(để trống tới phút 125; bốc số xong thì ghi đúng số đó, ví dụ `S3`. Lab Coach đối chiếu với sổ; lệnh tự kiểm tra in dòng này trong report.)*
+**Bàn:** G2026 · **Thẻ đã bốc:** S6 *(để trống tới phút 125; bốc số xong thì ghi đúng số đó, ví dụ `S3`. Lab Coach đối chiếu với sổ; lệnh tự kiểm tra in dòng này trong report.)*
 
 Mở `incidents/Sx/card.md` của đúng số đã bốc. Các bước trên thẻ trỏ về đúng mục trong phiếu này. Mục C3 chỉ điền phần ứng với
 số thẻ của bàn; các phần khác để trống.
@@ -30,10 +30,10 @@ Mỗi lệnh `lab10.eval` và `lab10.grade` tự ghi một dòng vào `runs/jour
 
 | # | Mã lần chạy | Bộ ticket · mốc | Đổi MỘT thứ gì so với lần trước | pass_rate (khoảng tin cậy 95%) | pass_k | Hoàn sai (đ) · lỗi hãng oan · lộ dữ liệu | Tỉ lệ chuyển người | Kết luận (một câu) |
 |---|---|---|---|---|---|---|---|---|
-| 1 | | Sx · prepared | nhận thẻ đã bốc, chưa sửa thêm (đúng cổng vòng 1 đã chốt) | | | | | |
-| 2 | | Sx · after | | | | | | |
-| 3 | | Sx · after | | | | | | |
-| 4 | | base · after | (kiểm không regression) | | | | | |
+| 1 | `R-S6-prepared-20261119-174403-65a8a4` (grade `R-S6-grade-20261119-174403-65a8a4`, base `R-S6-before-20261119-174403-65a8a4`) | S6 · prepared | nhận thẻ đã bốc, chưa sửa thêm (đúng cổng vòng 1 đã chốt `2d59c8c3`) | 0,6667 [0,4167; 0,9167] | 0,6667 | 270.000 · 20 · 0 | 0,0 | Cổng vòng 1 hạ lỗi hãng oan từ 40 xuống 20 (base → prepared) nhưng còn hỏng `S6-20`, `S6-21` (nhiều kiện cùng trễ, hệ thống tự chọn) và `S6-42`, `S6-43` (ghi lỗi hãng vượt trần mỗi ngày). |
+| 2 | `R-S6-after-20261119-174520-f5f23d` | S6 · after | `guards.py`: nhiều kiện cùng trễ mà ticket không ghi kiện → chuyển người trước khi hoàn; trần lỗi tự động mỗi hãng mỗi ngày theo `ops_limits` | 1,0 [1,0; 1,0] | 1,0 | 0 · 0 · 0 | 0,1667 | Cả 12 ticket S6 đạt ở 5 seed; chuyển người tăng từ 0 lên 0,1667 (đúng 2 ticket mơ hồ). |
+| 3 | | S6 · after | | | | | | |
+| 4 | `R-base-after-20261119-174525-f5f23d` | base · after | (kiểm không regression) | 1,0 [1,0; 1,0] | 1,0 | 0 · 0 · 0 | 0,2273 | Bộ nền giữ 110/110, tỉ lệ chuyển người không đổi: sửa vòng 2 không làm hỏng ca đang đúng. |
 
 ---
 
@@ -315,8 +315,8 @@ python3 -m lab10.grade --incident Sx
 
 | Nhánh fault tree | Nguyên nhân | Chỗ sửa (hàm + nhánh trong `guards.py`, hoặc khoá trong `operating_gates.json`) | Tầng (phát hiện / chặn / giới hạn thiệt hại / vận hành) | GIẢM khả năng hay NGĂN hẳn? Vì sao | Mã lần chạy sau khi sửa |
 |---|---|---|---|---|---|
-| [1] | | | | | |
-| [2] | | | | | |
+| [1] *(đối chiếu số nhánh với C6)* | Đơn tách kiện, ticket không ghi kiện nào, ≥ 2 kiện cùng trễ (`S6-20`, `S6-21`): hệ thống mang mô hình "một đơn = một hãng có lỗi" nên tự chọn một kiện, hoàn tiền rồi ghi lỗi cho hãng đó | `write_gate` khi `tool == "issue_refund"` (`_gate_refund`, nhánh `ambiguous_parcel`): đếm kiện trễ theo tracking (`_late_parcels`, ngưỡng `late.min_days_fee` của chính sách), không có `parcel_id` mà ≥ 2 kiện trễ → `Verdict.escalate` TRƯỚC lệnh ghi tiền đầu tiên | chặn | **NGĂN** nhánh "hệ thống tự đoán khi đầu vào không đủ": không có lệnh ghi nào chạy trước khi người xác định kiện. Chỉ **GIẢM** khi khách ghi sai `parcel_id` (cổng tin kiện khách nói) | `R-S6-after-20261119-174520-f5f23d` |
+| [2] *(đối chiếu số nhánh với C6)* | Cùng một hãng bị ghi "một lèo mấy lỗi liền" trong ngày (`S6-40` … `S6-43`, GHSH): trợ lý không đọc `ops_limits.max_auto_strikes_per_carrier_per_day` = 2 | `write_gate` khi `tool == "file_carrier_fault"` (`_gate_carrier_fault`, nhánh `carrier_strike_cap`): đếm `fault_rows(carrier_id=…)` trong ngày, chạm trần → `Verdict.deny` (vẫn hoàn cho khách, lỗi thứ 3 trở đi chờ người duyệt) | giới hạn thiệt hại | **GIẢM**: chặn từ lỗi thứ 3 trở đi, nhưng 2 lỗi đầu trong ngày vẫn ghi tự động và vẫn có thể sai nếu dữ liệu tracking sai | `R-S6-after-20261119-174520-f5f23d` |
 | [3] | | | | | |
 
 ---
