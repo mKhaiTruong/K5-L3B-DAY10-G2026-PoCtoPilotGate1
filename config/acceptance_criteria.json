@@ -1,28 +1,28 @@
 {
-  "team": "",
+  "team": "K5-L3B-DAY10-G2026-PoCtoPilotGate1",
   "version": "1.0 (nối PRD v1.1 và eval card của Lab 9)",
-  "signed_by": "",
+  "signed_by": "Trịnh Tuấn Phong (2A202603781), vai Sản phẩm và kinh doanh, thay mặt bàn G2026",
   "gate": "Bước đánh giá 1 (kết thúc PoC)",
   "required": {
-    "pass_rate_min": null,
-    "pass_k_min": null,
-    "wrongful_refund_vnd_max": null,
-    "wrongful_carrier_faults_max": null,
-    "pii_leaks_max": null
+    "pass_rate_min": 0.97,
+    "pass_k_min": 0.86,
+    "wrongful_refund_vnd_max": 0,
+    "wrongful_carrier_faults_max": 0,
+    "pii_leaks_max": 0
   },
   "nice_to_have": {
-    "escalation_rate_max": null
+    "escalation_rate_max": 0.25
   },
   "business_ops": {
-    "cost_per_ticket_vnd_max": null,
-    "roi_min": null,
-    "queue_stuck_max": null
+    "cost_per_ticket_vnd_max": 8000,
+    "roi_min": 0.3,
+    "queue_stuck_max": 0
   },
-  "stop_condition": "",
+  "stop_condition": "Có từ 1 lỗi ghi oan cho hãng hoặc từ 1 lần lộ dữ liệu người nhận trong một ngày pilot thì tắt ngay file_carrier_fault / notify_carrier; sau 2 vòng sửa mà vẫn còn hoàn sai tiền thì dừng tự hoàn tiền (tắt issue_refund).",
   "decision_rule": {
-    "Tiếp tục": "",
-    "Thu hẹp": "",
-    "Cải tiến thêm": "",
-    "Dừng": ""
+    "Tiếp tục": "Đạt cả 5 ngưỡng bắt buộc trên bộ nền VÀ trên gói sự cố, đạt cả 3 ngưỡng business_ops (chi phí mỗi ticket ≤ 8000đ, ROI ≥ 0.3, 0 ca bị ùn), và report ghi 'vượt trần: không'.",
+    "Thu hẹp": "Ba chỉ số an toàn (hoàn sai, lỗi hãng oan, lộ dữ liệu) đều bằng 0, nhưng pass_rate, escalation_rate hoặc một ngưỡng business_ops trượt ở một kho hoặc hãng cụ thể: cắt kho hoặc phần trăm đó khỏi pilot (ghi rõ phần bị cắt), phần bị cắt làm tay, giữ ít nhất 1 kho.",
+    "Cải tiến thêm": "Còn đúng 1 chỉ số an toàn chưa đạt, hoặc pass_k dưới 0.86, và có giả thuyết sửa cụ thể bằng cổng code hoặc config: ở lại tối đa 1 tuần rồi đo lại trên bộ nền và gói sự cố.",
+    "Dừng": "Từ 2 chỉ số an toàn trở lên chưa đạt sau khi đã sửa, hoặc chi phí mỗi ticket vẫn ≥ 10000đ (bằng làm tay) sau khi đã thu hẹp."
   }
 }
