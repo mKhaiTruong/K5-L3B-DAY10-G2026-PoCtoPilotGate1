@@ -75,3 +75,28 @@ Có. Mình dùng Claude Code (Anthropic) để đọc tài liệu lab, chạy l�
 
 - Học được: phải ký tiêu chí trước khi đo, và quyết định phải khớp đúng dòng đã ký. v1 chỉ đo bộ nền nên chưa đủ để chọn "Tiếp tục", phải ghi rõ là có điều kiện.
 - Còn chưa chắc: bộ thử chỉ có "ngày" giả lập, nên chưa biết trần 2 lỗi/hãng/ngày có giữ được hãng nhỏ khỏi ngưỡng đình chỉ 3 lỗi/7 ngày khi chạy thật hay không.
+
+## NguyenNamKhanh-2A202603871
+
+### Phần việc phụ trách
+
+Vận hành và pháp lý. Vòng 1 phụ trách Phiếu B mục B4–B5 (2.4), phần pháp lý ở B6 (2.5), và B7.5–B7.6 (2.10). Vòng 2 phụ trách Phiếu C mục C3.2–C4 (3.1), C5 câu 3.3, các dòng vận hành và pháp lý ở C7 (3.5), C10–C11 (3.7).
+
+### Đóng góp cụ thể
+
+- Phân tích rủi ro của thao tác hoàn tiền, điền checklist sẵn sàng và bổ sung hai tình huống pháp lý. Đặt người phụ trách, giới hạn chờ duyệt và quy tắc chia sẻ dữ liệu trong `config/operating_gates.json`. Viết runbook phần 1–3 và dùng hai lần chạy cùng bộ nền để so chi phí, ROI và hàng chờ khi có một hoặc hai người duyệt.
+- Với S6, đối chiếu trace ghi lỗi hãng với tracking từng kiện và nêu giả định khách luôn xác định đúng kiện. Bật ghi chú quyết định và kiểm mẫu 10%, giữ các cổng pháp lý đã có, ghi rủi ro lỗi hãng tích lũy trong 7 ngày và cập nhật checklist cùng runbook phần 4–5.
+
+### Bằng chứng
+
+- Phiếu B: PR #4 (B4–B5 và cài đặt vận hành/pháp lý), PR #14 (hai dòng pháp lý ở B6), PR #19 (B7.5–B7.6). Hai lượt so nhân sự: `R-base-after-20261119-174002-65a8a4` và `R-base-after-20261119-174003-3f05f4`.
+- Phiếu C: PR #21 (C3.2, C4, C5 câu 3.3), PR #25 (C7, C10, C11), đối chiếu mốc after chính thức ở C0: `R-S6-after-20261119-205547-ce8bfe`.
+
+### Sử dụng AI
+
+Có dùng ChatGPT/Codex để đọc tài liệu và trace, hỗ trợ soạn và soát Phiếu B/C, chuẩn bị thay đổi cấu hình và chạy kiểm tra. Có dùng AI để soạn nháp mục đóng góp này từ các PR và báo cáo đã có.
+
+### Exit ticket
+
+- Một điều học được: Có những tình huống nghe như khó có thể xảy ra, nhưng mô hình vẫn có thể gặp phải.
+- Một điều còn chưa chắc: Liệu các biện pháp nhóm đã làm có bao quát hết các tình huống có thể xảy ra hay chưa?
