@@ -163,14 +163,14 @@ mà cả bàn chưa nghĩ tới, không phải tả lại nhánh đã biết.
 **Câu hỏi dẫn dắt:** tool nào tạo ra hậu quả không đảo ngược? Mỗi tham số của tool đó lấy từ đâu (ticket, DB, model tự suy)?
 Với mỗi guideword: hậu quả cho ai, hiện có gì ngăn, cần thêm gate ở tầng nào (phát hiện / chặn / giới hạn thiệt hại)?
 
-Tool chọn phân tích: `________________` (gợi ý: `issue_refund`, `file_carrier_fault`, `notify_carrier`)
+Tool chọn phân tích: `issue_refund`.
 
 | Tham số / dòng dữ liệu | Guideword | Lệch cụ thể (viết bằng dữ kiện của lab) | Hậu quả, cho ai | Hiện có gì ngăn? | Gate đề xuất + tầng |
 |---|---|---|---|---|---|
-| | WRONG | | | | |
-| | INVALID | | | | |
+| `order_id` | WRONG | Mã đơn tồn tại nhưng đơn thuộc khách khác. PRD §2 yêu cầu “1 claim ↔ 1 đơn của chính khách gửi” (`PRD_v1.1.md`). | Khoản hoàn bị ghi vào đơn của khách khác. LogiX phải đối soát và xử lý lại yêu cầu của khách gửi. | `issue_refund` tra đơn theo mã và kiểm tra trần tổng tiền đơn. Tại bước ghi, mã khách trong sổ lấy từ đơn. | Chặn trước khi ghi nếu khách trong ticket khác chủ đơn tra từ dữ liệu đơn hàng. Chuyển người xử lý. |
+| `approval_id` | INVALID | Có mã phê duyệt nhưng mã gắn với đơn khác của cùng khách. Nhánh “approval for large refunds” trong `lab10/agent.py` có thể tra theo khách khi tra theo đơn không có kết quả. | Khoản hoàn vượt hạn mức có thể được ghi dưới phê duyệt sai phạm vi, gây lệch đối soát. | Agent tra theo đơn trước. Tại `issue_refund`, mã phê duyệt có giá trị làm khoản hoàn được bỏ qua phép kiểm trần hoàn tự động trong ngày. | Chặn trước khi ghi nếu phê duyệt không khớp đơn hoặc không bao phủ số tiền. Chuyển người duyệt xác minh. |
 | | INCOMPLETE | | | | |
-| | PERTURBED | | | | |
+| `ticket_id` và lệnh ghi lặp | PERTURBED | Cùng yêu cầu gửi lại lệnh ghi sau lần ghi đầu. `lab10/agent.py` có nhánh ghi sự kiện `write_retry` rồi gọi lại `issue_refund`. | Sổ cái có thể ghi khoản hoàn hai lần khi tổng vẫn dưới giá đơn, làm LogiX chi dư. | `issue_refund` cộng các khoản đã ghi để kiểm trần tổng tiền đơn. | Chặn ghi lặp dựa trên dấu nhận diện yêu cầu và khoản hoàn đã ghi. Trả kết quả giao dịch cũ cho lần thử lại. |
 | | INCAPABLE | | | | |
 
 Không bắt buộc điền đủ năm dòng. Bắt buộc: **ít nhất ba dòng, trong đó một dòng là nhánh bàn chưa thấy trên trace**.
@@ -186,8 +186,10 @@ Không bắt buộc điền đủ năm dòng. Bắt buộc: **ít nhất ba dòn
 
 | Thành phần | Guideword | Lệch cụ thể | Hậu quả, cho ai | Cổng đề xuất: code hay con số nào trong `config/operating_gates.json` |
 |---|---|---|---|---|
-| | | | | |
-| | | | | |
+| Người duyệt | INCAPABLE | Giả sử 8 ca đến cùng lúc và chỉ có một người duyệt. `data/world.json` ghi “Một người duyệt xử lý 6 ca/giờ (10 phút/ca)” và yêu cầu nhận xử lý trong 60 phút. | Với hàng chờ theo thứ tự đến, ca thứ tám bắt đầu ở phút 70. Khách chờ quá hạn và trưởng ca phải xử lý tồn đọng. | Đặt `operations.max_queue_wait_minutes` theo giới hạn 60 phút. Báo người trực khi thời gian chờ dự kiến vượt giới hạn để gọi thêm người hoặc thu hẹp phạm vi. |
+| Ngân sách Finance | WRONG | Trần trong `business.daily_refund_cap_vnd` bị bỏ trống hoặc đặt cao hơn `daily_auto_refund_budget_vnd` (2.000.000đ trong `data/world.json`). Các khoản nhỏ vẫn có thể cộng dồn vượt ngân sách. | LogiX chi vượt ngân sách hoàn tiền tự động trong ngày. Finance phải đối soát phần vượt. | Đặt `business.daily_refund_cap_vnd` trong giới hạn ngân sách. Khi chạm trần, chuyển các ca tiếp theo cho người duyệt. |
+
+*Cần đối chiếu với bảng soát lỗi B2 để xác nhận ít nhất một nhánh trên chưa xuất hiện trong trace của bàn.*
 
 **Ví dụ mẫu (`issue_refund`, đừng chép):** tham số `amount_vnd` · WRONG · số tiền tính từ số ngày khách tự khai · LogiX mất
 tiền, hãng bị kéo theo một lỗi · hiện chỉ có trần "không vượt tổng tiền đơn" · cổng ghi so với quyền lợi tính từ DB (chặn).
