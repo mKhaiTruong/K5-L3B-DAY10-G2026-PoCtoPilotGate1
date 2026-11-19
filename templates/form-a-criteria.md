@@ -23,10 +23,9 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 > Mỗi yêu cầu hoàn phí giao trễ được trợ lý tự giải quyết đúng chính sách đang hiệu lực và đúng dữ liệu được theo dõi, với số tiền và lỗi bên vận chuyển ghi khớp sổ, không bên nào bị ghi lỗi oan, rẻ hơn làm tay; ca lệch dữ liệu, vượt hạn mức hoặc thiếu phê duyệt thì chuyển cho trưởng ca CSKH
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
-- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần):
- Mỗi dòng hoàn tiền và mỗi dòng ghi lỗi bên vận chuyển mà trợ lý tạo ra đều có căn cứ tra lại được (số ngày trễ từ tracking, phiên bản chính sách đang hiệu lực, mã phê duyệt nếu có), ghi đúng bên trả và đúng bên vận chuyển, đúng kiện gây trễ, và khớp với số tiền đã báo cho khách. Nhờ vậy cuối tuần chị đối soát với hãng và shop không phải xử lý khoản nào lệch hoặc bị bên vận chuyển khiếu nại là ghi oan.
-- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang):
- Số ca trợ lý chuyển sang vừa sức người trực (mỗi người khoảng 6 ca/giờ), không ca nào phải chờ quá 60 phút. Mỗi ca đến tay chị kèm lý do vì sao bị chuyển (lệch tracking, vượt hạn mức, thiếu phê duyệt) để chị duyệt nhanh. Trợ lý không bao giờ tự dùng một phê duyệt mang tên chị khi phê duyệt đó đã hết hạn, đã dùng, hoặc không phải của đúng đơn.
+
+- Chị Oanh (Phạm Kiều Oanh, `NV-OANH`): Khi đối soát hằng tuần với hãng và shop, truy được mỗi khoản hoàn về đúng yêu cầu, đơn hàng, số tiền trong sổ cái và mã phê duyệt nếu có. Nếu số tiền báo khách lệch sổ cái, xác định được bản ghi cần đối soát. Căn cứ: `data/world.json` → `staff` ghi “Kế toán đối soát hãng vận chuyển và shop”, `PRD_v1.1.md` §2 ghi “1 claim ↔ 1 đơn” và §6 nêu điểm mù của phép đối chiếu tiền báo khách với sổ cái.
+- Chị Hạnh (Trần Thị Hạnh, `NV-HANH`): Nhận xử lý ca chuyển duyệt trong 60 phút, với mã đơn, căn cứ chính sách, số tiền đề xuất và lý do chuyển để quyết định có duyệt khoản vượt hạn mức hay không. Căn cứ: `data/world.json` → `staff` ghi “người duyệt hoàn tiền vượt hạn mức” và `ops_limits.review_sla_minutes` đặt 60 phút. `PRD_v1.1.md` §2 yêu cầu “có approval hợp lệ”.
 
 ---
 
@@ -49,12 +48,12 @@ trợ lý có đang gây thiệt hại cho bên ngoài LogiX không; không có 
 
 | | Offline, cho MỘT bước (câu 1.3) | Telemetry production (câu 1.4) |
 |---|---|---|
-| **Bước / hành vi được đo** | Bước **ghi lỗi hãng** (lệnh `file_carrier_fault`). Chọn bước này vì gắn thẳng với ngưỡng bắt buộc `wrongful_carrier_faults_max`; trong `lab10/agent.py` agent lấy hãng của kiện đầu tiên (`parcels[0]`) chứ không phải kiện trễ nhất, và nguyên nhân trễ không rõ thì mặc định là `CARRIER` | |
-| **Thước đo** (một câu, có đơn vị) | Tỉ lệ (%) lệnh ghi lỗi hãng ghi đúng hãng của kiện trễ và có nguyên nhân trễ ghi trong tracking | |
-| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | Trace bộ nền 22 ticket × 5 seed = 110 lần chạy (`runs/<mã lần chạy>/traces/`): sự kiện `file_carrier_fault` (`carrier_id`, `parcel_id`) và sự kiện `tracking` (`parcels`, `cause_recorded`). Nhãn: `label.faults` trong `data/tickets.jsonl`, đối chiếu `orders[].parcels` (`carrier_id`, `delay_cause`) trong `data/world.json` | |
-| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | Số lệnh ghi lỗi đúng (cặp `carrier_id`, `parcel_id` có trong `label.faults`) chia cho tổng số lệnh `file_carrier_fault`. Lần chạy không tới bước ghi lỗi (bị chuyển người, bị từ chối) bị loại khỏi mẫu số; ticket có nhãn cần ghi lỗi mà agent không ghi thì đếm riêng là "bỏ sót" | |
-| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | |
-| **Điểm mù** (thước đo này KHÔNG thấy gì) | Không thấy khi chính tracking ghi sai nguyên nhân hoặc sai hãng; không đo số tiền hoàn có đúng không | |
+| **Bước / hành vi được đo** | Bước **ghi lỗi hãng** (lệnh `file_carrier_fault`). Chọn bước này vì gắn thẳng với ngưỡng bắt buộc `wrongful_carrier_faults_max`; trong `lab10/agent.py` agent lấy hãng của kiện đầu tiên (`parcels[0]`) chứ không phải kiện trễ nhất, và nguyên nhân trễ không rõ thì mặc định là `CARRIER` | Ghi lỗi cho hãng vận chuyển qua hàm `file_carrier_fault` trong `lab10/tools.py`. |
+| **Thước đo** (một câu, có đơn vị) | Tỉ lệ (%) lệnh ghi lỗi hãng ghi đúng hãng của kiện trễ và có nguyên nhân trễ ghi trong tracking | Tỷ lệ (%) bản ghi lỗi hãng thiếu căn cứ hoặc có nguyên nhân nằm ngoài danh sách chính sách cho phép quy lỗi. |
+| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | Trace bộ nền 22 ticket × 5 seed = 110 lần chạy (`runs/<mã lần chạy>/traces/`): sự kiện `file_carrier_fault` (`carrier_id`, `parcel_id`) và sự kiện `tracking` (`parcels`, `cause_recorded`). Nhãn: `label.faults` trong `data/tickets.jsonl`, đối chiếu `orders[].parcels` (`carrier_id`, `delay_cause`) trong `data/world.json` | Thu toàn bộ sự kiện ghi lỗi hãng thành công trong pilot. Dùng `order_id` và `parcel_id` từ sự kiện `file_carrier_fault` để lưu nguyên nhân vận đơn (`delay_cause`) và danh sách nguyên nhân được phép quy lỗi (`fault_causes`) của chính sách có hiệu lực lúc ghi. Đây là các trường dùng trong kiểm tra `carrier_fault_requires_recorded_cause` ở `lab10/tools.py`. Không cần người gán nhãn. |
+| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | Số lệnh ghi lỗi đúng (cặp `carrier_id`, `parcel_id` có trong `label.faults`) chia cho tổng số lệnh `file_carrier_fault`. Lần chạy không tới bước ghi lỗi (bị chuyển người, bị từ chối) bị loại khỏi mẫu số; ticket có nhãn cần ghi lỗi mà agent không ghi thì đếm riêng là "bỏ sót" | Lấy 100 × số bản ghi thiếu nguyên nhân, có nguyên nhân ngoài danh sách, hoặc không tra được vận đơn hay chính sách lúc ghi, chia cho tổng số bản ghi lỗi hãng thành công. Đếm mỗi bản ghi một lần và báo riêng số ca thiếu dữ liệu. Mẫu số bằng 0 thì ghi “không có bản ghi”. |
+| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | Kiểm tra sau mỗi lần ghi và tổng hợp theo cửa sổ trượt 24 giờ. Đề xuất báo động ngay khi có ít nhất 1 bản ghi trong tử số để vận hành xác minh và xem xét tạm dừng ghi lỗi hãng. |
+| **Điểm mù** (thước đo này KHÔNG thấy gì) | Không thấy khi chính tracking ghi sai nguyên nhân hoặc sai hãng; không đo số tiền hoàn có đúng không | Tracking có thể ghi một nguyên nhân hợp lệ theo chính sách nhưng sai ngoài thực tế. Chỉ số cũng không phát hiện khoản hoàn sai hoặc dữ liệu cá nhân bị gửi ra ngoài. |
 
 **Ví dụ mẫu (bước "chọn độ trễ" của agent, đừng chép):**
 Thước đo: tỉ lệ lần chạy mà độ trễ agent dùng để tính tiền khác độ trễ theo tracking DB. Dữ liệu: sự kiện `proposal.delay_days_used`
