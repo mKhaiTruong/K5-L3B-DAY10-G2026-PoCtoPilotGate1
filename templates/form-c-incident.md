@@ -160,19 +160,19 @@ duyệt, chờ duyệt, trần).
 **Cách làm:** thảo luận theo nhóm rồi ghi cho **từng nhóm người dùng**: họ là ai, mục tiêu chính là gì, và hiện
 nay họ làm việc này **từng bước ra sao**, đồng đều hay mỗi nơi một kiểu. Dòng cuối: **hệ thống đang mang hình dung nào**, đọc từ trace.
 
-| | Nhóm A: `__________` (gợi ý: điều phối / tài xế của hãng) | Nhóm B: `__________` (gợi ý: kế toán đối soát hoặc CSKH) |
+| | Nhóm A: Điều phối và trưởng nhóm tài xế của hãng | Nhóm B: Kế toán đối soát LogiX (Oanh, NV-OANH) |
 |---|---|---|
-| Họ là ai, chạm vào kết quả của trợ lý ở đâu | | |
-| Mục tiêu chính của họ | | |
-| Hiện nay họ xác định "ai chịu lỗi giao trễ" theo các bước nào | | |
-| Cách làm đó đồng đều hay mỗi nơi một kiểu | | |
-| Theo hình dung của họ, **đơn vị chịu lỗi** là gì (đơn / kiện / chặng / tài xế)? | | |
+| Họ là ai, chạm vào kết quả của trợ lý ở đâu | Nhận thông báo ghi lỗi và kiểm tra khoản trừ thưởng của tài xế. Thẻ S6 ghi lại khiếu nại của trưởng nhóm tài xế Sông Hồng. | Đối chiếu bản ghi lỗi và khoản khấu trừ với hãng. Vai trò này nằm trong `data/world.json` → `staff`. |
+| Mục tiêu chính của họ | Chỉ quy trách nhiệm cho hãng và tài xế đã giao kiện trễ. Giữ được căn cứ để khiếu nại khi bị ghi oan. | Khoản khấu trừ phải khớp bằng chứng giao nhận, chính sách và đúng hãng. |
+| Hiện nay họ xác định "ai chịu lỗi giao trễ" theo các bước nào | Theo cách tra trong thẻ: mở đơn tách kiện, tra ngày giao của từng kiện, so với hẹn, xác định hãng và tài xế phụ trách kiện trễ, rồi yêu cầu xem lại lỗi nếu kiện của mình đúng hẹn. | Quy trình đối soát đề xuất: từ dòng lỗi tra mã kiện và hãng, đối chiếu ngày giao với ngày hẹn, kiểm nguyên nhân theo chính sách và đếm lỗi của hãng trong ngày trước khi xác nhận khấu trừ. Chuyển ca không đủ căn cứ cho người xác minh. |
+| Cách làm đó đồng đều hay mỗi nơi một kiểu | Thẻ chỉ ghi cách Sông Hồng tra lại đơn, chưa có bằng chứng các hãng dùng cùng quy trình. | Có thể dùng chung danh sách trường cần đối chiếu. Cần xác nhận với từng hãng rằng chứng từ tra được đến mã kiện và nguyên nhân. |
+| Theo hình dung của họ, **đơn vị chịu lỗi** là gì (đơn / kiện / chặng / tài xế)? | Kiện và chặng giao của tài xế được giao kiện đó. | Dòng lỗi gắn với kiện và hãng, tổng hợp theo hãng và ngày để kiểm trần. |
 
-**Hệ thống đang mang hình dung nào?** (đọc trace một ticket hỏng: `tracking.parcels` so với dòng `file_carrier_fault`)
+**Hệ thống đang mang hình dung nào?**
 
-- Với hệ thống, đơn vị chịu lỗi là: `__________`. Bằng chứng: ticket `______@seed ____`, dòng trace: `__________`.
-- Chỗ hai hình dung vênh nhau: `__________`.
-- Khi đầu vào không đủ để áp hình dung của con người (không biết kiện nào), hệ thống đang làm gì: `__________`; nên làm gì: `__________`.
+- Hệ thống lấy độ trễ của đơn để xử lý rồi gán lỗi cho kiện được chọn. Ở `S6-01@11` mốc base, dòng 02 ghi GHSH/P1 trễ 0 ngày và VNX/P2 trễ 4 ngày. Dòng 06 lại ghi `file_carrier_fault` cho GHSH/P1 với 4 ngày.
+- Chỗ vênh: Điều phối đối chiếu từng kiện và tài xế. Hệ thống ở mốc base đã gán độ trễ của kiện VNX cho kiện GHSH giao đúng hạn.
+- Khi thiếu mã kiện và có nhiều kiện trễ, mốc prepared chọn kiện trễ nhất. Ở `S6-20@11`, dòng 02 có GHSH/P1 trễ 3 ngày và VNX/P2 trễ 5 ngày, dòng 05 đã hoàn 26.000đ, rồi dòng 08 ghi lỗi cho VNX/P2. Hành động an toàn là chuyển người xác định kiện **trước** `issue_refund`, rồi mới cân nhắc ghi lỗi và báo hãng.
 
 → Mỗi chỗ vênh là một nhánh của fault tree. Gate tốt làm cho hệ thống hành xử theo hình dung của người chịu hậu quả.
 
@@ -231,13 +231,14 @@ Mở lại Phiếu B mục B3. Ghi ở đây những dòng đổi so với vòng
 
 *Mục riêng, không ghi đè HAZOP vòng 1 ở Phiếu B mục B4. Năm guideword và nghĩa của chúng: xem Phiếu B mục B4.*
 
-Tool chọn phân tích: `________________`
+Tool chọn phân tích: `file_carrier_fault` (ghi lỗi cho hãng và tài xế của kiện trong `lab10/tools.py`).
 
 | Tham số / dòng dữ liệu | Guideword (WRONG / INVALID / INCOMPLETE / PERTURBED / INCAPABLE) | Lệch cụ thể (mã ticket, trường dữ liệu của thẻ) | Hậu quả, cho ai | Hiện có gì ngăn? | Gate đề xuất + tầng |
 |---|---|---|---|---|---|
-| | | | | | |
-| | | | | | |
-| | | | | | |
+| `parcel_id`, `carrier_id`, `driver_id`, `delay_days` | WRONG | `S6-01@11` base, dòng 02 và 06: GHSH/P1 đúng hẹn nhưng bị ghi trễ 4 ngày của VNX/P2. | GHSH chịu lỗi oan. Thẻ S6 cho biết tài xế Sông Hồng bị trừ thưởng dù giao đúng hẹn. | Cổng vòng 1 đối chiếu kiện, hãng, tài xế, số ngày và nguyên nhân theo tracking trước khi ghi. | **Chặn hoặc sửa trước khi ghi:** xác định kiện có căn cứ, lấy cả bốn trường từ cùng kiện. Nếu không xác định được, chuyển người trước khi ghi. |
+| `ticket.parcel_id` | INCOMPLETE | `S6-20@11` prepared thiếu mã kiện. Hai kiện trễ 3 và 5 ngày, nhưng trợ lý đã hoàn 26.000đ rồi tự chọn kiện VNX để ghi lỗi. | LogiX hoàn khi chưa đủ căn cứ. Hãng và tài xế có thể chịu lỗi khi chưa biết khách nói tới kiện nào. | Vòng 1 sửa dữ liệu ghi lỗi theo tracking, nhưng vẫn chọn một kiện và cho hoàn. | **Chặn trước lệnh ghi đầu tiên:** `_gate_refund` vòng 2 chuyển người khi thiếu mã kiện và có ít nhất hai kiện đủ ngưỡng trễ. Trace after `S6-20@11` dòng 05–07 xác nhận chưa ghi tiền hay lỗi. |
+| Số lỗi tự động theo hãng trong ngày | WRONG | C0 mốc prepared: `S6-42`, `S6-43` vẫn ghi thêm lỗi GHSH sau hai ca `S6-40`, `S6-41`. `ops_limits.max_auto_strikes_per_carrier_per_day` đặt trần 2. | Hãng có thể bị khấu trừ nhiều lần trong ngày mà chưa có người rà soát. | Vòng 1 kiểm căn cứ từng lỗi nhưng chưa kiểm tổng lỗi của hãng. | **Giới hạn thiệt hại:** cổng vòng 2 từ chối ghi tự động từ lỗi thứ ba, vẫn xử lý quyền lợi khách nếu có căn cứ. Hạnh kiểm ca bị chặn trước mọi xử lý thủ công liên quan. |
+| `ticket.parcel_id` có thật nhưng gắn nhầm kiện | WRONG | **Chưa thấy trong các trace đã đọc:** lấy cặp GHSH/P1 và VNX/P2 của `O-2620` từ `world_patch.json`. Giả sử phiếu chọn P1 dù khách đang khiếu nại P2. Cả hai đều trễ nên mã đúng định dạng và thuộc đúng đơn vẫn có thể sai nghiệp vụ. | Hãng và tài xế của P1 có thể bị quy lỗi cho vụ khiếu nại về P2. | Kiểm tra mã thuộc đơn và có độ trễ chỉ đối chiếu dữ liệu của kiện đã chọn. Cổng thiếu mã chỉ kích hoạt khi không có mã. | **Phát hiện trước khi ghi:** nếu mã kiện và bằng chứng khiếu nại mâu thuẫn, yêu cầu xác nhận hoặc chuyển người. Ghi vào sổ rủi ro để bổ sung ca thử. |
 
 Bắt buộc: ít nhất ba dòng, trong đó **một dòng là nhánh bàn chưa thấy trên trace** lúc viết.
 
@@ -255,9 +256,9 @@ Kiểm bằng gì (hàm trong `guards.py`, dòng report nào): …
 
 ### Câu 3.3 · Một giả định về môi trường mà người thiết kế đã ngầm tin, nhưng nhiều khả năng sai ngoài thực tế
 
-Giả định (thứ nằm NGOÀI phần mềm): …
+Giả định (thứ nằm NGOÀI phần mềm): khách hoặc nhân viên tiếp nhận luôn xác định đúng kiện đang bị khiếu nại khi gửi ticket cho đơn tách kiện.
 
-Vì sao có thể sai: …
+Vì sao có thể sai: khách thường chỉ có mã đơn trên thông báo và có thể nói chung là “đơn giao chậm”. Thẻ S6 ghi nhận hai hãng cùng giao trễ nhưng khách không nói kiện nào. `S6-20` và `S6-21` trong `incidents/S6/tickets.jsonl` thiếu `parcel_id`. Khi có nhiều kiện cùng trễ, ngày giao trong tracking cho biết kiện nào trễ nhưng không cho biết khách đang khiếu nại kiện nào.
 
 ---
 
