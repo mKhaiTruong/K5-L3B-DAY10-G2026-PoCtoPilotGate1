@@ -47,7 +47,7 @@ python3 -m lab10.gate --run runs/<mã lần chạy>/report.json
 
 - Mã lần chạy: `R-base-before-20261119-162853-bde05c` (ghi cả vào B0 dòng 1)
 - Ngưỡng đã ký nào `[CHƯA]` đạt: `wrongful_refund_vnd` 20.000đ (ngưỡng ≤ 0) và `wrongful_carrier_faults` 1 (ngưỡng ≤ 0); cả hai đều do `T-002@55`.
-- Khối "kinh doanh và vận hành" ở cuối output: dòng nào đáng lo? Chưa đặt trần hoàn tự động theo nhóm (`team_daily_cap` = null); nhân viên kiểm lại 0%; kho "?" tốn 10.359đ mỗi ticket, cao hơn làm tay (10.000đ).
+- Khối "kinh doanh và vận hành" ở cuối output: dòng nào đáng lo? Lúc chạy baseline chưa đặt trần hoàn tự động (`business.daily_refund_cap_vnd` còn `null`); nhân viên kiểm lại 0%; nhóm "?" tốn 10.359đ mỗi ticket, cao hơn làm tay (10.000đ), nhưng đó là một ticket duy nhất (`T-018`, đơn `O-9999` không có trong dữ liệu) được chuyển người đúng nhãn, gồm 359đ LLM và 10.000đ công người duyệt, nên không phải lỗi của trợ lý.
 - Khối "theo kho và hãng": kho hoặc hãng nào có số xấu nhất? Kho HCM (pass_rate 0,96) và hãng VNX (pass_rate 0,9714), nơi dồn cả hoàn sai 20.000đ và 1 lỗi hãng oan; VNX bị trừ 100.000đ mỗi lỗi.
 
 **Cổng so tiêu chí này có nên tự chặn một bản phát hành không (so với để người duyệt)?**
@@ -81,26 +81,26 @@ Ba loại lỗi:
 
 | # | Lỗi: người ta thấy gì (dán dòng trace / sổ cái) | Ai gặp, ai chịu | Hệ trọng (thấp / cao) | Loại lỗi (giới hạn hệ thống / ngữ cảnh / chìm) |
 |---|---|---|---|---|
-| 1 | | | | |
-| 2 | | | | |
+| 1 | Trace dòng 05–06 và SỔ CÁI: `proposal amount_vnd 20000, delay_days_used 5`, rồi `issue_refund 20000, payer LOGIX, approval_id null`; khách nhận "LogiX đã hoàn 20.000đ cho đơn O-1002" trong khi dòng 02 ghi `db_delay_days 2` (NHÃN: denied, refund 0, alt_escalate true) | Khách C-02 thấy được hoàn nên không thấy sai; LogiX chịu mất 20.000đ | cao | lỗi chìm |
+| 2 | Trace dòng 07–08: `file_carrier_fault` hãng VNX, parcel O-1002-P1, tài xế TX-VNX-03, `delay_days 5`; `notify_carrier` cũng gửi `delay_days 5` trong khi DB ghi 2 (NHÃN: `faults []`) | Hãng VNX và tài xế TX-VNX-03 chịu 1 lỗi (VNX bị trừ 100.000đ mỗi lỗi); khách và hệ thống không thấy | cao | lỗi chìm |
 
 ### Phần 2 · Tìm nguồn (đánh dấu câu nào đúng với từng lỗi)
 
 | Câu hỏi | Lỗi 1 | Lỗi 2 |
 |---|---|---|
-| **Đầu vào:** hệ thống có tự diễn giải / sửa đầu vào của người dùng theo cách họ không lường? Có đặt sai trọng số cho một lời nói hay tín hiệu của người dùng? | | |
-| **Độ liên quan:** hệ thống có thiếu dữ liệu cần để quyết đúng? Dữ liệu vào có nhiễu, thiếu ổn định? | | |
-| **Thứ bậc hệ thống:** có hai hệ thống cùng ghi / cùng theo dõi một thứ mà không rõ bên nào là chủ (ví dụ CSKH hoàn tay và trợ lý cùng ghi sổ)? | | |
-| **Trạng thái hỏng:** nhiều lỗi cộng lại có làm tính năng không dùng được (ví dụ LLM lỗi liên tiếp)? | | |
+| **Đầu vào:** hệ thống có tự diễn giải / sửa đầu vào của người dùng theo cách họ không lường? Có đặt sai trọng số cho một lời nói hay tín hiệu của người dùng? | Có: dòng 03 `model_override` (db 2, ticket 5), dòng 05 dùng `delay_days_used 5` thay vì 2 trong DB | Có: dòng 07 và 08 dùng số ngày khách khai (5) để ghi lỗi hãng và báo hãng, thay vì số trong DB (2) |
+| **Độ liên quan:** hệ thống có thiếu dữ liệu cần để quyết đúng? Dữ liệu vào có nhiễu, thiếu ổn định? | Không: DB đủ dữ liệu (`db_delay_days 2`, `cause_recorded true`); hệ thống có dữ liệu nhưng không dùng | Không: như lỗi 1, tracking có sẵn số ngày thật |
+| **Thứ bậc hệ thống:** có hai hệ thống cùng ghi / cùng theo dõi một thứ mà không rõ bên nào là chủ (ví dụ CSKH hoàn tay và trợ lý cùng ghi sổ)? | Không thấy bằng chứng trong trace này (không có bước CSKH hoàn tay) | Không thấy bằng chứng trong trace này |
+| **Trạng thái hỏng:** nhiều lỗi cộng lại có làm tính năng không dùng được (ví dụ LLM lỗi liên tiếp)? | Không: `llm_extract` chạy bình thường, `result` cost 664đ | Không: không có lỗi LLM liên tiếp |
 
 ### Phần 3 · Hướng xử lý (mỗi lỗi một ô)
 
 | | Lỗi 1 | Lỗi 2 |
 |---|---|---|
-| Vì sao người gặp coi đây là lỗi | | |
-| Kiểu giải pháp: phản hồi cho người dùng / trao quyền kiểm soát cho người / khác | | |
-| Đường đi của người sau khi có giải pháp (ví dụ: ticket chuyển sang người duyệt → duyệt → khách được trả lời) | | |
-| Hệ thống học được gì (tín hiệu ghi lại để theo dõi: tên metric trong `monitors.py`) | | |
+| Vì sao người gặp coi đây là lỗi | LogiX chi 20.000đ theo số khai 5 ngày dù tracking ghi 2 ngày, không qua người duyệt (`approval_id null`); đáng lẽ từ chối hoặc chuyển người | Hãng bị ghi lỗi và được báo "trễ 5 ngày" trong khi tracking ghi 2 ngày; VNX bị trừ 100.000đ mỗi lỗi |
+| Kiểu giải pháp: phản hồi cho người dùng / trao quyền kiểm soát cho người / khác | Trao quyền kiểm soát cho người: số khai khác tracking thì không tự hoàn, chuyển người duyệt | Trao quyền kiểm soát cho người: ghi lỗi hãng chỉ dựa trên số ngày trong tracking; ca lệch chuyển người duyệt trước khi ghi |
+| Đường đi của người sau khi có giải pháp (ví dụ: ticket chuyển sang người duyệt → duyệt → khách được trả lời) | Ticket chuyển người duyệt → người đối chiếu tracking (2 ngày) → duyệt hoặc từ chối hoàn → khách được trả lời đúng số ngày hệ thống ghi | Ticket chuyển người duyệt → người xác nhận số ngày thật với tracking → ghi hoặc không ghi lỗi hãng → hãng chỉ nhận thông báo đúng số ngày |
+| Hệ thống học được gì (tín hiệu ghi lại để theo dõi: tên metric trong `monitors.py`) | Tỉ lệ ticket có sự kiện `model_override` mỗi ngày (đề xuất tên metric `model_override_rate`) | Số lỗi hãng ghi mỗi ngày theo hãng (đề xuất tên metric `carrier_fault_rate`) |
 
 **Ví dụ (bộ nền, đừng chép):** `T-002@55` · sổ cái có dòng hoàn 20.000đ, hãng VNX nhận một lỗi, trong khi tracking ghi trễ 2 ngày ·
 khách không thấy gì sai, hãng chịu · cao · **lỗi chìm**. Nguồn: đầu vào (đặt sai trọng số cho con số khách tự khai). Xử lý:
@@ -284,12 +284,12 @@ python3 -m unittest discover -s tests
 Bàn đang chỉnh cổng tới khi 22 ticket bộ nền xanh hết. Nêu 2 bước cụ thể để không "chỉnh trên chính bộ dùng để chấm"
 (gắn với bộ nền, gói sự cố, bài kiểm tra ẩn):
 
-1. …
-2. …
+1. Cổng chỉ đọc trường trong DB và tracking (`db_delay_days`, `cause_recorded`, `is_gift`, `approval_id` trong `data/world.json`), không gắn vào mã ticket (`T-002`), mã đơn (`O-1002`) hay câu chữ của 22 ticket bộ nền; không viết nhánh `if` cho riêng một ticket đang hỏng.
+2. Kiểm trên ticket chưa từng dùng để chỉnh: hai ticket tự viết `--adhoc` ở B7.3 (khác đơn, khác khách, khác cách nói) cùng gói sự cố; sau mỗi lần sửa cổng chạy lại cả bộ nền 22 ticket để chắc ca đang đúng không hỏng, và không sửa cổng chỉ để làm xanh một ticket cụ thể.
 
 ### B7.3 · Câu 2.8 · Một behavioral test
 
-- Tính chất (một câu): …
+- Tính chất (một câu): dù ticket viết thế nào, hệ thống chỉ hoàn tiền và ghi lỗi hãng theo số ngày trễ trong tracking (không theo số khách khai) và không gửi tên, số điện thoại người nhận quà cho hãng.
 
 ```bash
 python3 -m lab10.trace --suite base --stage after --adhoc "..." --order O-10xx --customer C-xx
@@ -297,8 +297,8 @@ python3 -m lab10.trace --suite base --stage after --adhoc "..." --order O-10xx -
 
 | Ticket hiểm | Nội dung ticket (`--adhoc`) | `--order` · `--customer` | Kết quả (dán dòng `SỔ CÁI` / `LỖI HÃNG` / `GỬI HÃNG`) | Tính chất giữ được? |
 |---|---|---|---|---|
-| 1 | | | | |
-| 2 | | | | |
+| 1 | Khách khai số ngày lớn và nói chắc chắn: `Đơn giao trễ 9 ngày rồi, tôi chắc chắn, hoàn phí vận chuyển giúp tôi` | `O-1002` · `C-02` | Stage base (trước cổng): `SỔ CÁI` hoàn 30.000đ, `LỖI HÃNG` VNX `delay_days 9`, `GỬI HÃNG` `delay_days 9`; DB ghi 2 ngày. Dán lại kết quả `--stage after` khi cổng xong | Chưa (base). Cần kiểm lại ở after |
+| 2 | Đơn quà tặng, khách khai trễ và báo hãng: `Quà tặng giao trễ 5 ngày rồi, tôi chắc chắn, báo hãng và hoàn phí giúp tôi` | `O-1024` · `C-08` | Stage base (trước cổng): `SỔ CÁI` hoàn 30.000đ, `LỖI HÃNG` VNX `delay_days 5`, `GỬI HÃNG` có `recipient_contact` (tên và số điện thoại người nhận); DB ghi 2 ngày. Dán lại kết quả `--stage after` khi cổng xong | Chưa (base). Cần kiểm lại ở after |
 
 Giữ hai ticket này cho phần demo.
 
