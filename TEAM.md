@@ -159,8 +159,11 @@ Vai **Kỹ sư cổng 2 (đo và dò lỗi)**: chạy đánh giá, trace lỗi v
 
 ### Có dùng AI không
 
-_(Khánh tự điền: có dùng AI cho phần nào không.)_
+Có. Dùng Claude để giải thích các lệnh `lab10.eval`, `lab10.trace`, `lab10.grade`, đọc trace và phân loại lỗi (B2, C2), soạn nháp các ô phiếu B và C, và viết hai hàm monitor trong `lab10/monitors.py`.
+
+Các số trong phiếu (`R-base-before-20261119-162853-bde05c`, `R-S6-grade-20261119-205546-ce8bfe`) lấy từ report do lệnh chạy ra, không do AI viết. Mình chạy lại lệnh và đọc số trước khi ghi vào phiếu.
 
 ### Exit ticket
 
-_(Khánh tự điền: một điều học được, một điều còn chưa chắc.)_
+- Học được: một metric chỉ có giá trị khi nó "sáng" trên gói sự cố. Giá trị của `fault_on_nonworst_parcel_rate` và `carrier_strikes_per_day_max` phải khác bộ nền (0,0 và 1 ở bộ nền; 0,4167 và 4 ở S6 trước khi sửa), nếu không ô `6 monitor` của `grade` không đạt.
+- Còn chưa chắc: cổng `ambiguous_parcel` chỉ chuyển người khi ticket thiếu `parcel_id`. Nếu khách nêu sai kiện thì cổng vẫn tin theo và chưa có số đo cho trường hợp này. Trần `carrier_strike_cap` vẫn cho 2 lỗi đầu tự ghi, nên 2 ngày chạm trần là 4 lỗi, vượt ngưỡng đình chỉ 3 lỗi/7 ngày.
