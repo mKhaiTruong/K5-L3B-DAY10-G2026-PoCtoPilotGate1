@@ -77,33 +77,33 @@ python3 -m lab10.trace --suite Sx --ticket <ID> --seed 11
 Ba loại lỗi: **giới hạn của hệ thống** · **lỗi ngữ cảnh** · **lỗi chìm** (cả người dùng lẫn hệ thống đều không nhận ra; nguy hiểm nhất,
 người chịu hại thường là bên thứ ba). Định nghĩa đầy đủ và ví dụ: Phiếu B mục B2.
 
-**Tác hại của thẻ:** cho ai `____` · đo bằng gì `____` · bao nhiêu ở mốc base `____`
+**Tác hại của thẻ:** cho ai `hãng nhỏ (GHSH, VNX) và tài xế bị trừ thưởng vì kiện giao đúng hẹn` · đo bằng gì `wrongful_carrier_faults (lỗi hãng oan), kèm hoàn sai` · bao nhiêu ở mốc base `40 lỗi hãng oan và 270.000đ hoàn sai trên bộ thẻ S6 (bộ nền cùng mốc: 1 lỗi và 20.000đ)`
 
 ### Phần 1 · Ghi lỗi (bằng chứng là mã ticket@seed và dòng trace, không tả chung chung)
 
 | # | Lỗi: người ta thấy gì (dán dòng trace / sổ cái) | Ai gặp, ai chịu | Hệ trọng (thấp / cao) | Loại lỗi (giới hạn hệ thống / ngữ cảnh / chìm) |
 |---|---|---|---|---|
-| 1 | | | | |
-| 2 | | | | |
-| 3 | | | | |
+| 1 | `S6-01@11` dòng 06: `file_carrier_fault` hãng GHSH, kiện `O-2601-P1`, tài xế `TX-GHSH-06`, `delay_days 4`. Dòng 02 tracking: P1 (GHSH) trễ 0, P2 (VNX) trễ 4; khách viết rõ "kiện thứ hai đến chậm, kiện đầu thì đúng hẹn". NHÃN: lỗi phải ghi cho VNX kiện `O-2601-P2`. | Tài xế TX-GHSH-06 và hãng GHSH chịu (kiện đúng hẹn vẫn bị ghi lỗi); khách vẫn được hoàn 30.000đ nên không thấy gì sai | cao | lỗi chìm |
+| 2 | `S6-20@11` dòng 02: P1 (GHSH) trễ 3, P2 (VNX) trễ 5, ticket không ghi kiện nào. Dòng 06 ghi lỗi `O-2620-P1` GHSH với `delay_days 5` (số ngày của kiện VNX) và dòng 05 hoàn 26.000đ. NHÃN: `escalated`, không hoàn, không ghi lỗi. | GHSH nhận lỗi mang số ngày của hãng khác; LogiX chi 26.000đ; khách thấy được hoàn | cao | ngữ cảnh (giả định "một đơn = một hãng có lỗi") |
+| 3 | `S6-40` … `S6-43` cùng ngày, cùng hãng GHSH (mỗi đơn một kiện, trễ 3 đến 5 ngày): dòng 06 của từng ticket ghi 4 lỗi liền cho GHSH (tài xế `TX-GHSH-03` đến `TX-GHSH-06`). `ops_limits.max_auto_strikes_per_carrier_per_day` = 2 nên `S6-42` và `S6-43` (NHÃN `faults []`) phải chờ người duyệt. Từng ca đứng riêng đều hợp lệ. | Hãng nhỏ GHSH và 4 tài xế bị trừ thưởng; LogiX nhận khiếu nại từ hãng | cao | lỗi chìm |
 
 ### Phần 2 · Tìm nguồn (đánh dấu câu nào đúng với từng lỗi)
 
 | Câu hỏi | Lỗi 1 | Lỗi 2 | Lỗi 3 |
 |---|---|---|---|
-| **Đầu vào:** hệ thống có tự diễn giải / sửa đầu vào của người dùng theo cách họ không lường? Có đặt sai trọng số cho một lời nói hay tín hiệu của người dùng? | | | |
-| **Độ liên quan:** hệ thống có thiếu dữ liệu cần để quyết đúng? Dữ liệu vào có nhiễu, thiếu ổn định? | | | |
-| **Thứ bậc hệ thống:** có hai hệ thống cùng ghi / cùng theo dõi một thứ mà không rõ bên nào là chủ (ví dụ CSKH hoàn tay và trợ lý cùng ghi sổ)? | | | |
-| **Trạng thái hỏng:** nhiều lỗi cộng lại có làm tính năng không dùng được (ví dụ LLM lỗi liên tiếp)? | | | |
+| **Đầu vào:** hệ thống có tự diễn giải / sửa đầu vào của người dùng theo cách họ không lường? Có đặt sai trọng số cho một lời nói hay tín hiệu của người dùng? | Có: lời khách "kiện thứ hai chậm" không được dùng; agent lấy kiện đầu `parcels[0]` (dòng 06) | Có: ticket không ghi kiện, agent tự điền kiện đầu làm đại diện cả đơn | Không: ticket bình thường, không có chữ nào bị hiểu sai |
+| **Độ liên quan:** hệ thống có thiếu dữ liệu cần để quyết đúng? Dữ liệu vào có nhiễu, thiếu ổn định? | Không: tracking (dòng 02) đã có số ngày trễ từng kiện | Có: không có `parcel_id` mà 2 kiện cùng trễ nên dữ liệu không đủ để biết ai có lỗi | Không: dữ liệu từng ca đủ |
+| **Thứ bậc hệ thống:** có hai hệ thống cùng ghi / cùng theo dõi một thứ mà không rõ bên nào là chủ (ví dụ CSKH hoàn tay và trợ lý cùng ghi sổ)? | Không thấy hệ thống thứ hai cùng ghi | Không thấy hệ thống thứ hai cùng ghi | Không thấy: trước cổng không có bộ đếm lỗi chung theo hãng giữa các ticket |
+| **Trạng thái hỏng:** nhiều lỗi cộng lại có làm tính năng không dùng được (ví dụ LLM lỗi liên tiếp)? | Không | Không | Có: nhiều lỗi nhỏ cộng lại (4 lỗi một hãng trong ngày) vượt trần 2 lỗi mỗi ngày đã thống nhất với Ops |
 
 ### Phần 3 · Hướng xử lý (mỗi lỗi một ô)
 
 | | Lỗi 1 | Lỗi 2 | Lỗi 3 |
 |---|---|---|---|
-| Vì sao người gặp coi đây là lỗi | | | |
-| Kiểu giải pháp: phản hồi cho người dùng / trao quyền kiểm soát cho người / khác | | | |
-| Đường đi của người sau khi có giải pháp (ví dụ: ticket chuyển sang người duyệt → duyệt → khách được trả lời) | | | |
-| Hệ thống học được gì (tín hiệu ghi lại để theo dõi: tên metric trong `monitors.py`) | | | |
+| Vì sao người gặp coi đây là lỗi | Kiện của họ giao đúng hẹn mà tài xế vẫn mất thưởng chuyên cần | Hệ thống tự đoán kiện nào có lỗi khi khách chưa nói; kế toán đối soát gắn lỗi theo từng kiện nên không nhận kết quả này | Hãng nhỏ bị ghi một lèo mấy lỗi liền, vượt trần 2 lỗi mỗi ngày đã thống nhất |
+| Kiểu giải pháp: phản hồi cho người dùng / trao quyền kiểm soát cho người / khác | Trao quyền kiểm soát cho người: lỗi hãng chỉ ghi theo kiện trễ trong tracking; mơ hồ thì chuyển người | Trao quyền kiểm soát cho người, kèm phản hồi cho khách: người duyệt hỏi lại khách kiện nào | Khác (giới hạn thiệt hại): trần lỗi tự động mỗi hãng mỗi ngày, từ lỗi thứ 3 chờ người duyệt |
+| Đường đi của người sau khi có giải pháp (ví dụ: ticket chuyển sang người duyệt → duyệt → khách được trả lời) | Cổng sửa kiện, hãng, tài xế, số ngày theo tracking trước khi ghi; nếu không xác định được thì ticket chuyển người duyệt | Ticket chuyển người duyệt → người xác định kiện với khách → ghi lỗi đúng hãng → khách được trả lời | 2 lỗi đầu ghi tự động; lỗi thứ 3 chờ người duyệt (Hạnh) → xác minh với tracking → ghi hoặc bỏ |
+| Hệ thống học được gì (tín hiệu ghi lại để theo dõi: tên metric trong `monitors.py`) | `fault_on_nonworst_parcel_rate` trong `monitors.py` | `fault_on_nonworst_parcel_rate` và `escalation_rate` | `carrier_strikes_per_day_max` trong `monitors.py` |
 
 Yêu cầu: ít nhất **hai lỗi có nguồn khác nhau** ở phần 2, và ít nhất một lỗi được xếp đúng là **lỗi chìm**.
 
@@ -346,14 +346,14 @@ Thẻ S5 dùng mục này cho một con số kinh doanh: chi phí mỗi ticket t
 
 | | Chỉ số theo dõi mới của bàn |
 |---|---|
-| **Tên trong `MONITORS`** | |
-| **Bước / hành vi được đo** | |
-| **Thước đo** (một câu, có đơn vị) | |
-| **Dữ liệu** (trường nào của trial, không có nhãn) | |
-| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | |
-| **Khung thời gian / ngưỡng báo động** | |
-| **Điểm mù** (chỉ số này KHÔNG thấy gì) | |
-| Giá trị trên bộ nền · trên thẻ (đọc mục `monitor` của report) | |
+| **Tên trong `MONITORS`** | `fault_on_nonworst_parcel_rate` (chính) và `carrier_strikes_per_day_max` (bổ sung) |
+| **Bước / hành vi được đo** | Lệnh ghi `file_carrier_fault`: ghi lỗi cho kiện nào, hãng nào, và một hãng bị ghi bao nhiêu lỗi trong ngày |
+| **Thước đo** (một câu, có đơn vị) | (1) Tỉ lệ dòng lỗi hãng ghi cho kiện không phải kiện trễ nhất (0 đến 1). (2) Số lỗi nhiều nhất mà một hãng bị ghi trong một ngày vận hành (lỗi) |
+| **Dữ liệu** (trường nào của trial, không có nhãn) | (1) `events` loại `tracking` (`parcels[].delay`) so với `faults[].parcel_id`. (2) `faults[].carrier_id` nhóm theo `seed` và `day`. Không dùng nhãn. |
+| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | (1) lỗi ghi cho kiện có `delay` nhỏ hơn `delay` lớn nhất của đơn ÷ tổng dòng lỗi hãng; trial không có tracking thì bỏ qua cả tử và mẫu; không có lỗi nào thì 0. (2) đếm dòng lỗi theo (seed, day, hãng) rồi lấy lớn nhất; không có lỗi thì 0. |
+| **Khung thời gian / ngưỡng báo động** | Theo từng ngày vận hành. (1) báo động khi > 0 (bộ nền là 0). (2) vượt trần khi > 2 (`ops_limits.max_auto_strikes_per_carrier_per_day`); bằng 2 là chạm trần, báo vàng. |
+| **Điểm mù** (chỉ số này KHÔNG thấy gì) | (1) không thấy khi chính tracking DB ghi sai kiện; không thấy ca hai kiện trễ bằng nhau (`S6-21`: DNB 4 ngày, MKD 4 ngày); không thấy lỗi ghi đúng kiện nhưng sai hãng. (2) không thấy 2 lỗi đầu trong ngày nếu chúng sai; "ngày" trong dữ liệu giả lập là nhóm ticket cùng `scenario`, không phải ngày lịch thật. |
+| Giá trị trên bộ nền · trên thẻ (đọc mục `monitor` của report) | (1) base 0,0 · thẻ S6 trước khi sửa 0,4167 · sau 0,0. (2) base 1 · thẻ S6 trước 4 · sau 2 (đúng bằng trần). Nguồn: report `R-S6-grade-20261119-105105-03b4f1`, mục `monitor`; kiểm tra 6 ✅. |
 
 ---
 
@@ -378,9 +378,9 @@ Vẽ lại cây ở C6. Ở mỗi nhánh đã xử lý, thêm một nút `VÀ [g
 | Nhánh | Gate (hàm trong `guards.py` / khoá config / metric trong `monitors.py`) | Tầng gate (phát hiện / chặn / giới hạn thiệt hại / vận hành) | Giảm hay ngăn? Vì sao | Nhánh còn hở |
 |---|---|---|---|---|
 | [1] | `write_gate` → `_gate_refund`, nhánh `ambiguous_parcel`: không có `parcel_id` mà ≥ 2 kiện trễ theo `_late_parcels` thì `Verdict.escalate` trước lệnh ghi tiền đầu tiên | chặn | **NGĂN** khi ticket không nêu kiện: không lệnh ghi nào chạy trước khi người xác định kiện (`S6-20`, `S6-21` đạt ở 5 seed). | Khách nêu **sai** `parcel_id`: cổng tin kiện khách nói, nên chỉ GIẢM. Tracking ghi sai số ngày trễ của kiện thì cổng cũng không biết. |
-| [2] | `write_gate` → `_gate_carrier_fault`, nhánh `carrier_strike_cap`: đếm lỗi của hãng trong ngày, chạm `ops_limits.max_auto_strikes_per_carrier_per_day` = 2 thì `Verdict.deny` (vẫn hoàn cho khách) | giới hạn thiệt hại | **GIẢM**: lỗi thứ 3 trở đi trong ngày chờ người (`S6-42`, `S6-43` đạt), nhưng 2 lỗi đầu vẫn ghi tự động. | Trần tính theo **ngày**, còn ngưỡng đình chỉ tính theo **7 ngày**: 2 lỗi/ngày × 2 ngày = 4 lỗi > 3 lỗi/7 ngày của GHSH và DNB. |
+| [2] | `write_gate` → `_gate_carrier_fault`, nhánh `carrier_strike_cap`: đếm lỗi của hãng trong ngày, chạm `ops_limits.max_auto_strikes_per_carrier_per_day` = 2 thì `Verdict.deny` (vẫn hoàn cho khách) Theo dõi bằng metric `carrier_strikes_per_day_max` trong `monitors.py`. | giới hạn thiệt hại | **GIẢM**: lỗi thứ 3 trở đi trong ngày chờ người (`S6-42`, `S6-43` đạt), nhưng 2 lỗi đầu vẫn ghi tự động. | Trần tính theo **ngày**, còn ngưỡng đình chỉ tính theo **7 ngày**: 2 lỗi/ngày × 2 ngày = 4 lỗi > 3 lỗi/7 ngày của GHSH và DNB. |
 | [3] | Chưa có gate. Mục `business` trong `config/operating_gates.json` giữ nguyên (không có khoá cho tiền hãng bị trừ). Đề xuất: chỉ số số lỗi tự động mỗi hãng trong 7 ngày so với `suspend_after_strikes_7d` (C8), và bước đối soát của NV-OANH trước khi trừ tiền hãng (Risk register C10) | vận hành (chưa có) | **Chưa giảm, chưa ngăn** ở nhánh này. Chỉ được [2] giảm gián tiếp, vì có ít lỗi tự động hơn đi vào đối soát. | Còn hở: lỗi tự động đúng trần vẫn thành tiền phạt ngay, hãng nhỏ vẫn có thể bị đình chỉ chỉ bằng lỗi tự động. |
-| [4] | Cổng 2 vòng 1 (`guards_round1.py`, giữ nguyên trong `guards.py`, sự kiện `carrier_fault_fixed`): sửa kiện / hãng / tài xế / số ngày của lệnh ghi lỗi theo tracking | chặn (sửa lệnh ghi) | **NGĂN** khi đơn có đúng 1 kiện trễ: lệnh ghi luôn trỏ về kiện trễ thật (`S6-01` … `S6-04` đạt từ mốc prepared). | Khi ≥ 2 kiện cùng trễ thì cổng này vẫn đoán, nên ca đó được nhánh [1] chặn trước. |
+| [4] | Cổng 2 vòng 1 (`guards_round1.py`, giữ nguyên trong `guards.py`, sự kiện `carrier_fault_fixed`): sửa kiện / hãng / tài xế / số ngày của lệnh ghi lỗi theo tracking Theo dõi bằng metric `fault_on_nonworst_parcel_rate` trong `monitors.py`. | chặn (sửa lệnh ghi) | **NGĂN** khi đơn có đúng 1 kiện trễ: lệnh ghi luôn trỏ về kiện trễ thật (`S6-01` … `S6-04` đạt từ mốc prepared). | Khi ≥ 2 kiện cùng trễ thì cổng này vẫn đoán, nên ca đó được nhánh [1] chặn trước. |
 
 ---
 
