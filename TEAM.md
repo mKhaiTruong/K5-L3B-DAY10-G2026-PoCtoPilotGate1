@@ -64,7 +64,7 @@ Vai **Sản phẩm và kinh doanh**: tiêu chí chấp nhận, chi phí và quy�
 ### Bằng chứng
 
 - Commit: `43c2b92` (Sign acceptance criteria), `4cec516` (cổng business), `35833aa`, `1dbe43a` (B6, B7.4), `7adb34d` (B8 v1), `1878ae6` (Phiếu C). PR #5, #8, #12, #18, #22.
-- Mã lần chạy: v1 `R-base-prepared-20261119-173345-1b1054`. v2 `R-S6-after-20261119-205547-ce8bfe`, `R-base-after-20261119-210929-ce8bfe`, grade `R-S6-grade-20261119-205546-ce8bfe`.
+- Mã lần chạy: v1 `R-base-prepared-20261119-173345-1b1054`. v2 `R-S6-after-20261119-205547-ce8bfe`, grade `R-S6-grade-20261119-205546-ce8bfe`.
 - Dòng trong phiếu: Phiếu B mục B8. Phiếu C mục C1, C6, C7 dòng [3], C9, C12.
 
 ### Có dùng AI không
