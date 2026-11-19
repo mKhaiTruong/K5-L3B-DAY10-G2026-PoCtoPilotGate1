@@ -332,6 +332,8 @@ python3 -m lab10.grade --incident Sx
 | [1] *(đối chiếu số nhánh với C6)* | Đơn tách kiện, ticket không ghi kiện nào, ≥ 2 kiện cùng trễ (`S6-20`, `S6-21`): hệ thống mang mô hình "một đơn = một hãng có lỗi" nên tự chọn một kiện, hoàn tiền rồi ghi lỗi cho hãng đó | `write_gate` khi `tool == "issue_refund"` (`_gate_refund`, nhánh `ambiguous_parcel`): đếm kiện trễ theo tracking (`_late_parcels`, ngưỡng `late.min_days_fee` của chính sách), không có `parcel_id` mà ≥ 2 kiện trễ → `Verdict.escalate` TRƯỚC lệnh ghi tiền đầu tiên | chặn | **NGĂN** nhánh "hệ thống tự đoán khi đầu vào không đủ": không có lệnh ghi nào chạy trước khi người xác định kiện. Chỉ **GIẢM** khi khách ghi sai `parcel_id` (cổng tin kiện khách nói) | `R-S6-after-20261119-174520-f5f23d` |
 | [2] *(đối chiếu số nhánh với C6)* | Cùng một hãng bị ghi "một lèo mấy lỗi liền" trong ngày (`S6-40` … `S6-43`, GHSH): trợ lý không đọc `ops_limits.max_auto_strikes_per_carrier_per_day` = 2 | `write_gate` khi `tool == "file_carrier_fault"` (`_gate_carrier_fault`, nhánh `carrier_strike_cap`): đếm `fault_rows(carrier_id=…)` trong ngày, chạm trần → `Verdict.deny` (vẫn hoàn cho khách, lỗi thứ 3 trở đi chờ người duyệt) | giới hạn thiệt hại | **GIẢM**: chặn từ lỗi thứ 3 trở đi, nhưng 2 lỗi đầu trong ngày vẫn ghi tự động và vẫn có thể sai nếu dữ liệu tracking sai | `R-S6-after-20261119-174520-f5f23d` |
 | [3] | Lỗi ghi tự động biến ngay thành tiền phạt hãng (GHSH 150.000đ/lỗi, đình chỉ sau 3 lỗi trong 7 ngày); trần tiền của bàn chỉ tính tiền LogiX hoàn nên không trần nào báo | `config/operating_gates.json` mục `business`: **giữ nguyên** (`daily_refund_cap_vnd` 500000, `cost_budget_per_ticket_vnd` 1500, `pilot_scope` all, `roi_min` 0.3). Không thu hẹp `pilot_scope`: kho HCM xấu nhất ở prepared (pass 0,5, hoàn sai 270.000đ) là do đơn tách kiện mơ hồ chứ không do kho, cắt HCM chỉ giấu lỗi. Mục `business` không có khoá nào cho tiền hãng bị trừ, nên nhánh này đưa vào Risk register (C10) kèm đề xuất chỉ số số lỗi tự động mỗi hãng trong 7 ngày (C8). | giới hạn thiệt hại (chưa có) | **Không ngăn.** Chỉ **GIẢM** gián tiếp nhờ nhánh [2] (trần 2 lỗi/hãng/ngày), nhưng 2 lỗi/ngày trong 2 ngày đã vượt ngưỡng đình chỉ 3 lỗi/7 ngày của GHSH và DNB, nên vẫn còn hở. Số kinh doanh mốc after: chi phí 4.812đ/ticket ≤ 8.000đ, ROI 1,08 ≥ 0,3, không vượt trần. | `R-S6-after-20261119-174520-f5f23d` |
+| [3] | Lỗi đơn lẻ có thể đi vào đối soát trước khi có người kiểm lại quyết định tự động. | `operations.decision_note`: false → true, `operations.review_sampling_pct`: 0 → 10 theo `data/world.json` → `staff_behavior.trust_conditions`. Hạnh đứng tên duyệt, giữ 1 người/ca, 6 ca/giờ và tối đa 60 phút chờ. | phát hiện / vận hành | **GIẢM**: ghi chú và kiểm mẫu giúp Hạnh truy căn cứ, không bảo đảm bắt hết lỗi. Lượt thử S6 kiểm lại 10%, chờ tối đa 0 phút, 0 ca ùn, 5.228đ/ticket, ROI 0,91. Bộ nền 110/110. | Chạy thử tại nhánh: `R-S6-after-20261119-203504-a2fa51` · nền `R-base-after-20261119-203505-a2fa51` |
+| [3], [4] | Hãng cần căn cứ theo từng kiện để xác minh lỗi và phản hồi khiếu nại. | Giữ `legal.carrier_fault_requires_recorded_cause = true` và tiếp tục bỏ `customer_note`, `recipient_contact` khỏi thông báo. Bổ sung bước nghiệp vụ: Oanh đối chiếu mã kiện, hãng, tracking và chính sách trước khi xác nhận phạt hoặc đình chỉ. | chặn / vận hành | Chặn ghi thiếu căn cứ theo dữ liệu hiện có. **GIẢM** rủi ro đối soát sai qua bước người kiểm. Cấu hình chưa tự chặn phạt hoặc đình chỉ theo cửa sổ 7 ngày. | `R-S6-after-20261119-203504-a2fa51`: 0 lỗi hãng oan, 0 lộ dữ liệu. Bước đối soát cần diễn tập. |
 
 ---
 
@@ -388,7 +390,7 @@ Vẽ lại cây ở C6. Ở mỗi nhánh đã xử lý, thêm một nút `VÀ [g
 
 | Rủi ro | Khả năng | Tác động | Người phụ trách (PIC, một người) | Dấu hiệu (metric nào, ngưỡng nào) | Xử lý | Ảnh hưởng bước đánh giá | Nhóm chức năng (GOVERN / MAP / MEASURE / MANAGE) |
 |---|---|---|---|---|---|---|---|
-| | | | | | | | |
+| Lỗi tự động có thể cộng dồn dẫn đến phạt hoặc đình chỉ oan. GHSH và DNB có ngưỡng 3 lỗi/7 ngày, trong khi cổng chỉ giới hạn 2 lỗi/hãng/ngày (C9, nhánh [3]). | Có thể nếu dữ liệu hoặc mã kiện sai, hay lỗi tích lũy qua nhiều ngày. | Hãng chịu khấu trừ, tài xế mất thưởng, hãng nhỏ có thể bị đình chỉ. | Phạm Kiều Oanh (NV-OANH) | Report `wrongful_carrier_faults` ≥ 1 trong kiểm định. Trong pilot, Oanh rà soát thủ công khi sổ đối soát có 2 lỗi trong 7 ngày với GHSH/DNB. | Giữ lại khoản phạt hoặc đề xuất đình chỉ để kiểm từng kiện và xác nhận cùng hãng. Nếu xác minh ghi oan, báo Tùng tắt `file_carrier_fault` và `notify_carrier`. | Chưa bật khấu trừ hoặc đình chỉ tự động cho đến khi có bằng chứng đối soát 7 ngày. Đo lại trước Gate 2. | MANAGE |
 
 Quy tắc: **mỗi dòng phải đổi được một quyết định.** Cột "Dấu hiệu" phải là một metric có trong `monitors.py` hoặc trong report.
 
@@ -400,30 +402,32 @@ Quy tắc: **mỗi dòng phải đổi được một quyết định.** Cột "
 
 ### Cập nhật checklist (bảng gốc ở Phiếu B mục B5)
 
-Ghi các dòng đổi sau sự cố. Mỗi dòng vẫn phải có một PIC có tên.
+Ghi các dòng đổi sau sự cố. Mỗi dòng vẫn phải có một PIC có tên. Các trạng thái dựa trên lượt chạy thử của nhánh. Đối chiếu lại với report after của bản hợp nhất trước khi chốt.
 
 | # nhóm | Trạng thái mới (Xong / Chưa / Không áp dụng) | Bằng chứng mới (mã lần chạy, mục phiếu, số trong report) | PIC |
 |---|---|---|---|
-| | | | |
-| | | | |
+| 1 · Chất lượng | Xong | Lượt thử tại nhánh `R-S6-after-20261119-203504-a2fa51` đạt 60/60. Bộ nền `R-base-after-20261119-203505-a2fa51` đạt 110/110. | Triệu Quốc Khánh |
+| 6 · Chi phí | Xong | Lượt thử S6: 5.228đ/ticket (trần tổng 8.000đ), tiền LLM tối đa 767đ (trần 1.500đ), ROI 0,91 (sàn 0,30). | Trịnh Tuấn Phong |
+| 7 · Vận hành | Chưa | Lượt thử S6 ghi kiểm lại 10%, chờ tối đa 0 phút và 0 ca ùn. Cần diễn tập báo động và xác nhận trên bản hợp nhất. | Nam Khánh |
+| 8 · Con người, pháp lý | Chưa | Lượt thử S6 có 0 lỗi hãng oan và 0 lộ dữ liệu. Đối soát trước phạt hoặc đình chỉ và cảnh báo tích lũy 7 ngày vẫn cần kiểm (C10). | Nam Khánh |
 
 ### Runbook 4 · Sau sự cố trên thẻ (vòng 2)
 
 | Câu hỏi | Trả lời |
 |---|---|
-| Tín hiệu nào ở Runbook 2 (Phiếu B mục B7.5) lẽ ra phải báo trước sự cố này? Nó đã có chưa? | |
-| Bàn thêm hoặc đổi ngưỡng nào, từ bao nhiêu thành bao nhiêu? | |
-| Bàn đổi gì về **người** (số người trực, ai đứng tên, ai được gọi)? | |
-| Bàn đổi gì về **phạm vi** hoặc **quy trình** (kiểm mẫu, ghi chú giải thích, trần)? | |
-| Nói gì với bên thứ ba bị ảnh hưởng (hãng, shop, người nhận, nhân viên duyệt), ai nói, trong bao lâu? | |
-| Dữ liệu cá nhân nào đã rời hệ thống mà không thu hồi được? Báo cho ai? | |
-| Sự cố lộ ra trước qua số máy đo, phản hồi của người, hay đọc nội dung? Nguồn nào bàn chưa có? | |
+| Tín hiệu nào ở Runbook 2 (Phiếu B mục B7.5) lẽ ra phải báo trước sự cố này? Nó đã có chưa? | Đã có tín hiệu đỏ khi xác nhận ghi oan cho hãng. Cần phát hiện sớm hơn khi lỗi tự động của một hãng dồn dập hoặc tích lũy sát ngưỡng đình chỉ. Rà sổ lỗi theo hãng mỗi ngày và xem lại cửa sổ 7 ngày trước đối soát. |
+| Bàn thêm hoặc đổi ngưỡng nào, từ bao nhiêu thành bao nhiêu? | Vòng 1 chưa thực thi trần lỗi tự động theo hãng. Vòng 2 dùng trần 2 lỗi/hãng/ngày. Kiểm mẫu tăng 0% → 10%. Với GHSH/DNB, đề xuất báo Oanh khi sổ có 2 lỗi trong 7 ngày, trước ngưỡng đình chỉ 3. |
+| Bàn đổi gì về **người** (số người trực, ai đứng tên, ai được gọi)? | Giữ 1 người trực (6 ca/giờ) và Hạnh đứng tên duyệt. Hạnh gọi hỗ trợ nếu có 5 ca chờ hoặc ca lâu nhất chờ 40 phút. Gọi Oanh nếu có lỗi tranh chấp, gọi Tùng nếu cần tắt cổng. |
+| Bàn đổi gì về **phạm vi** hoặc **quy trình** (kiểm mẫu, ghi chú giải thích, trần)? | Phạm vi theo C7 của Phong. Bật ghi chú và kiểm mẫu 10%. Tách kiểm mẫu quyết định tự động khỏi bước Oanh kiểm từng trường hợp trước khi xác nhận phạt hoặc đình chỉ hãng. |
+| Nói gì với bên thứ ba bị ảnh hưởng (hãng, shop, người nhận, nhân viên duyệt), ai nói, trong bao lâu? | Mục tiêu đề xuất: Hạnh báo đầu mối hãng trong 1 giờ kể từ khi tiếp nhận rằng bản ghi đang được xác minh và đề nghị giữ khoản khấu trừ. Oanh đối chiếu từng kiện và gửi kết quả hoặc lịch cập nhật trong 1 ngày làm việc. Chỉ chia sẻ thông tin cần thiết để đối chiếu. |
+| Dữ liệu cá nhân nào đã rời hệ thống mà không thu hồi được? Báo cho ai? | Thẻ S6 mô tả ghi lỗi và phạt oan. Lượt thử báo `pii_leaks = 0`, chưa có bằng chứng lộ dữ liệu cá nhân. Nếu phát hiện dữ liệu đã gửi sai, báo Tùng qua kênh ca trực và thực hiện quy trình dừng trong Runbook 3. |
+| Sự cố lộ ra trước qua số máy đo, phản hồi của người, hay đọc nội dung? Nguồn nào bàn chưa có? | Phản ánh từ trưởng nhóm tài xế Sông Hồng trong thẻ S6. Chưa có đối chiếu tự động giữa sổ lỗi của LogiX, khoản khấu trừ của hãng và bảng thưởng tài xế. |
 
 ### Runbook 5 · Ba kịch bản "nếu … thì …" cho tuần đầu chạy thử thật
 
-1. Nếu số ticket tăng gấp ___ lần trong một giờ thì: …
-2. Nếu nhà cung cấp LLM lỗi quá ___ phút thì: …
-3. Nếu người duyệt báo không tin một quyết định của trợ lý thì: …
+1. Nếu số ticket tăng gấp 3 lần trong một giờ, Hạnh kiểm ca chờ và gọi hỗ trợ khi có 5 ca chờ hoặc chờ lâu nhất 40 phút. Nếu dự báo vượt 60 phút, báo Tùng điều phối thu hẹp và chuyển ca quá hạn cho người.
+2. Nếu nhà cung cấp LLM lỗi quá 5 phút (ngưỡng đề xuất), Tùng tắt ghi hoàn, ghi lỗi và báo hãng. Hạnh chuyển ca sang xử lý thủ công. Đối soát sổ trước khi thử lại bất kỳ lệnh ghi nào.
+3. Nếu người duyệt báo không tin một quyết định, Hạnh giữ ca để kiểm mã kiện, tracking, chính sách và ghi chú. Nếu liên quan đến khoản phạt, Oanh giữ khoản đó để đối soát. Nếu xác nhận ghi oan, Tùng tắt ngay ghi lỗi và báo hãng theo Runbook 3.
 
 ---
 
