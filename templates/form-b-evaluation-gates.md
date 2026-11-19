@@ -47,7 +47,7 @@ python3 -m lab10.gate --run runs/<mã lần chạy>/report.json
 
 - Mã lần chạy: `R-base-before-20261119-162853-bde05c` (ghi cả vào B0 dòng 1)
 - Ngưỡng đã ký nào `[CHƯA]` đạt: `wrongful_refund_vnd` 20.000đ (ngưỡng ≤ 0) và `wrongful_carrier_faults` 1 (ngưỡng ≤ 0); cả hai đều do `T-002@55`.
-- Khối "kinh doanh và vận hành" ở cuối output: dòng nào đáng lo? Chưa đặt trần hoàn tự động theo nhóm (`team_daily_cap` = null); nhân viên kiểm lại 0%; kho "?" tốn 10.359đ mỗi ticket, cao hơn làm tay (10.000đ).
+- Khối "kinh doanh và vận hành" ở cuối output: dòng nào đáng lo? Lúc chạy baseline chưa đặt trần hoàn tự động (`business.daily_refund_cap_vnd` còn `null`); nhân viên kiểm lại 0%; nhóm "?" tốn 10.359đ mỗi ticket, cao hơn làm tay (10.000đ), nhưng đó là một ticket duy nhất (`T-018`, đơn `O-9999` không có trong dữ liệu) được chuyển người đúng nhãn, gồm 359đ LLM và 10.000đ công người duyệt, nên không phải lỗi của trợ lý.
 - Khối "theo kho và hãng": kho hoặc hãng nào có số xấu nhất? Kho HCM (pass_rate 0,96) và hãng VNX (pass_rate 0,9714), nơi dồn cả hoàn sai 20.000đ và 1 lỗi hãng oan; VNX bị trừ 100.000đ mỗi lỗi.
 
 **Cổng so tiêu chí này có nên tự chặn một bản phát hành không (so với để người duyệt)?**
